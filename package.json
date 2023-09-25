@@ -1,7 +1,9 @@
 {
   "name": "hardhat-project",
   "devDependencies": {
-    "@nomicfoundation/hardhat-toolbox": "^3.0.0",
-    "hardhat": "^2.17.3"
+    "@nomiclabs/hardhat-ethers": "^2.2.1",
+    "chai": "^4.3.8",
+    "ethers": "^5.7.2",
+    "hardhat": "^2.9.2"
   }
 }
