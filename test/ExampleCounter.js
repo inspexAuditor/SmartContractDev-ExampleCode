@@ -11,7 +11,7 @@ describe("ExampleCounter", function () {
     const Counter = await ethers.getContractFactory("ExampleCounter");
     const requiredAmount = ethers.utils.parseEther("0.1");
     const answer = 7;
-    const counter = await Counter.connect(owner).deploy(answer, {value: requiredAmount});
+    const counter = await Counter.connect(deployer).deploy(answer, {value: requiredAmount, gasLimit: 5000000});
 
     return { counter, deployer, otherAccount };
   }
