@@ -6,7 +6,7 @@ pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract AccessControlExample is Ownable {
+contract AccessControlOwnable is Ownable {
     
     function donate() external payable {
         require(msg.value > 0, "Please donate more than zero.");

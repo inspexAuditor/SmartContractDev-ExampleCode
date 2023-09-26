@@ -1,15 +1,15 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 
-describe("ExampleCounter", function () {
+describe("AccessControlCustom", function () {
   
   async function deploy() {
     /// Get accounts
     let [deployer, donator, theft] = await ethers.getSigners();
 
     /// Deploy testing contracts
-    const DonationWithAccesssControl = await ethers.getContractFactory("AccessControlExample");
-    const donation = await DonationWithAccesssControl.connect(deployer).deploy({gasLimit: 5000000});
+    const DonationWithCustomAccesssControl = await ethers.getContractFactory("AccessControlCustom");
+    const donation = await DonationWithCustomAccesssControl.connect(deployer).deploy({gasLimit: 5000000});
 
     return { donation, deployer, donator, theft };
   }
