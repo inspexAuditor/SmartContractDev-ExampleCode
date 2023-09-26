@@ -8,7 +8,7 @@ describe("ExampleCounter", function () {
     let [deployer, donator, theft] = await ethers.getSigners();
 
     /// Deploy testing contracts
-    const DonationWithAccesssControl = await ethers.getContractFactory("AccessControlExample");
+    const DonationWithAccesssControl = await ethers.getContractFactory("AccessControlOwnable");
     const donation = await DonationWithAccesssControl.connect(deployer).deploy({gasLimit: 5000000});
 
     return { donation, deployer, donator, theft };
