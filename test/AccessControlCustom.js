@@ -1,7 +1,7 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 
-describe("AccessControlOwnable", function () {
+describe("AccessControlCustom", function () {
   
   async function deploy() {
     /// Get accounts
