@@ -1,7 +1,7 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 
-describe("CentralizedContract", function () {
+describe("CentralizedContract EOA", function () {
   
   async function deploy() {
     /// Get accounts
