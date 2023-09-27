@@ -13,3 +13,7 @@ artifacts
 
 
 .openzeppelin/.session
+.openzeppelin
+jsconfig.json
+networks.js
+yarn.lock
