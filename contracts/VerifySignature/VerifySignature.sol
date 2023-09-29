@@ -120,4 +120,13 @@ contract VerifySignature {
 
         // implicitly return (r, s, v)
     }
+    function getMalleabilitySignature(bytes memory sig) public pure returns (bytes memory malsig) {
+        (bytes32 r, bytes32 s, uint8 v) = splitSignature(sig);
+        
+        if(v==27) v++;
+        else if(v==28) v--;
+
+        s = bytes32(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141 - uint256(s));
+        return abi.encodePacked(r,s,v);
+    }
 }

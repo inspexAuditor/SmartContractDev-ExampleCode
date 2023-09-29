@@ -4,7 +4,7 @@ const { arrayify, parseEther } = require("ethers/lib/utils");
 const { ethers } = require("hardhat");
 require("@nomicfoundation/hardhat-chai-matchers")
 
-describe("MetaTokenTransfer", function () {
+describe(" Token Transfer", function () {
   it("Should let user transfer tokens through a relayer with different nonces", async function () {
     // Deploy the contracts
     const InsdexTokenFactory = await ethers.getContractFactory("InsdexToken");

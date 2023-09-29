@@ -93,35 +93,27 @@ describe("VerifySignature", function () {
     });
   });
 
-
-  // describe("Test claimTokens", () => {
-  //   it('should claimable if valid signature', async () => {
-  //     const { verifySignature, deployer, otherAccount } = await deploy();
-  //     console.log("before balanceOf",await verifySignature.balanceOf(otherAccount.address)) 
-  //     const signer = deployer.address;
-  //     console.log("signer",signer)
-  //     const to = otherAccount.address;
-  //     const amount = 123;
-  //     const message = 'Hello, world!';
-  //     const nonce = 1;
-  //     const messageHash = await verifySignature.getMessageHash(to, amount, message, nonce);
-  //     console.log("1) getMessageHash:", messageHash);
-  //     const getEthSignedMessageHash = await verifySignature.getEthSignedMessageHash(messageHash);
-  //     console.log("2) getEthSignedMessageHash:", getEthSignedMessageHash);
-  //     const signature = await deployer.signMessage(ethers.utils.arrayify(messageHash));
-  //     console.log("3) Sign message hash (signature)", signature)
-
-  //     const recover = await verifySignature.recoverSigner(getEthSignedMessageHash, signature);
-  //     console.log("recover address: ",recover)
-  //     await verifySignature.claimTokens(to, amount, message, nonce, signature);
-
-  //     console.log(await verifySignature.balanceOf(otherAccount.address))
-  //     console.log(await verifySignature.balanceOf(otherAccount.address))
-  //     // expect(await verifySignature.balanceOf(otherAccount.address)).to.equal(amount, "Message hash is incorrect");
-  //     // expect(result, 'after balanceOf').to.be.true
-  //   });
-  // });
+  it("Should let signature replay happen (SignatureMalleability)", async function () {
+    const { verifySignature, deployer, otherAccount } = await deploy();
+    const signer = deployer.address;
+    console.log("signer",signer)
+    const to = otherAccount.address;
+    const amount = 123;
+    const message = 'Hello, world!';
+    const nonce = 1;
+    const messageHash = await verifySignature.getMessageHash(to, amount, message, nonce);
+    console.log("1) getMessageHash:", messageHash);
+    const getEthSignedMessageHash = await verifySignature.getEthSignedMessageHash(messageHash);
+    console.log("2) getEthSignedMessageHash:", getEthSignedMessageHash);
+    const signature = await deployer.signMessage(ethers.utils.arrayify(messageHash));
+    console.log("3) Sign message hash (signature)", signature)
+    const SignatureMalleability = await verifySignature.getMalleabilitySignature(signature);
+    console.log("4) SignatureMalleability message hash (signature)", SignatureMalleability)
 
 
-
+    const recover = await verifySignature.recoverSigner(getEthSignedMessageHash, SignatureMalleability);
+    console.log("recover address: ",recover)
+    const result = await verifySignature.verify(signer, to, amount, message, nonce, signature);
+    expect(result, 'Signature is not valid').to.be.true
+  });
 });
