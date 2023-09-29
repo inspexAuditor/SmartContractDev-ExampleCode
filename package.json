@@ -4,6 +4,7 @@
     "@nomicfoundation/hardhat-chai-matchers": "^1.0.6",
     "@nomiclabs/hardhat-ethers": "^2.2.1",
     "@openzeppelin/contracts": "^4.9.3",
+    "openzeppelin-contracts-06": "npm:@openzeppelin/contracts@3.4.2",
     "chai": "^4.3.8",
     "ethers": "^5.7.2",
     "hardhat": "^2.9.2"
