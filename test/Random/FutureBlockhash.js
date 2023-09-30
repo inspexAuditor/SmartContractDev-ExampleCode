@@ -36,8 +36,7 @@ describe("Random Future Block hash", function () {
         await ethers.provider.send("hardhat_mine", ["0xa"]);
 
         const draw = await lotteryGame.connect(deployer).draw();
-        const random = await lotteryGame.connect(deployer).randomNumber();
-        console.log(random)
+
         console.log(`balance after deployer : ${ethers.utils.formatEther(await ethers.provider.getBalance(deployer.getAddress()))} ethers`)
         console.log(`balance after player1 : ${ethers.utils.formatEther(await ethers.provider.getBalance(player1.getAddress()))} ethers`)
         console.log(`balance after player2 : ${ethers.utils.formatEther(await ethers.provider.getBalance(player2.getAddress()))} ethers`)

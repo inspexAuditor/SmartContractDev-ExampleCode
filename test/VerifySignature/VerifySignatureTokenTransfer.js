@@ -2,25 +2,25 @@ const { expect } = require("chai");
 const { BigNumber } = require("ethers");
 const { arrayify, parseEther } = require("ethers/lib/utils");
 const { ethers } = require("hardhat");
-require("@nomicfoundation/hardhat-chai-matchers")
 
-describe(" Token Transfer", function () {
+describe("VerifySignature Token Transfer", function () {
+
+  async function deploy() {
+    /// Get accounts
+    let [deployer, userAddress, relayerAddress, recipientAddress] = await ethers.getSigners();
+
+    /// Deploy testing contracts
+    const InsdexToken = await ethers.getContractFactory("InsdexToken");
+    const insdexTokenContract = await InsdexToken.connect(deployer).deploy();
+    const TokenSender = await ethers.getContractFactory("TokenSender");
+    const tokenSenderContract = await TokenSender.connect(deployer).deploy();
+    return { insdexTokenContract, tokenSenderContract, userAddress, relayerAddress, recipientAddress };
+  }
+
+
   it("Should let user transfer tokens through a relayer with different nonces", async function () {
     // Deploy the contracts
-    const InsdexTokenFactory = await ethers.getContractFactory("InsdexToken");
-    const insdexTokenContract = await InsdexTokenFactory.deploy();
-    await insdexTokenContract.deployed();
-
-    const MetaTokenSenderFactory = await ethers.getContractFactory(
-      "TokenSender"
-    );
-    const tokenSenderContract = await MetaTokenSenderFactory.deploy();
-    await tokenSenderContract.deployed();
-
-    // Get three addresses, treat one as the user address
-    // one as the relayer address, and one as a recipient address
-    const [_, userAddress, relayerAddress, recipientAddress] =
-      await ethers.getSigners();
+    const { insdexTokenContract, tokenSenderContract, userAddress, relayerAddress, recipientAddress } = await deploy();
 
     console.log(userAddress.address)
 
@@ -113,20 +113,7 @@ describe(" Token Transfer", function () {
 
   it("Should not let signature replay happen", async function () {
     // Deploy the contracts
-    const InsdexTokenFactory = await ethers.getContractFactory("InsdexToken");
-    const insdexTokenContract = await InsdexTokenFactory.deploy();
-    await insdexTokenContract.deployed();
-
-    const MetaTokenSenderFactory = await ethers.getContractFactory(
-      "TokenSender"
-    );
-    const tokenSenderContract = await MetaTokenSenderFactory.deploy();
-    await tokenSenderContract.deployed();
-
-    // Get three addresses, treat one as the user address
-    // one as the relayer address, and one as a recipient address
-    const [_, userAddress, relayerAddress, recipientAddress] =
-      await ethers.getSigners();
+    const { insdexTokenContract, tokenSenderContract, userAddress, relayerAddress, recipientAddress } = await deploy();
 
     // Mint 10,000 tokens to user address (for testing)
     const tenThousandTokensWithDecimals = parseEther("10000");
@@ -181,6 +168,6 @@ describe(" Token Transfer", function () {
       insdexTokenContract.address,
       nonce,
       signature
-      )).to.be.revertedWith('Already executed!');
-    });
+    )).to.be.revertedWith('Already executed!');
+  });
 });
