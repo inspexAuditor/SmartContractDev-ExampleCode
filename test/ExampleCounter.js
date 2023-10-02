@@ -21,7 +21,7 @@ describe("ExampleCounter", function () {
       const { counter, deployer } = await deploy();
       console.log(`deployer addres  : ${await deployer.getAddress()}`);
       console.log(`contract owner: ${await counter.owner()}`);
-      expect(await counter.owner() == deployer);
+      expect(await counter.owner()).to.be.equal(deployer.address);
     });
   });
 
