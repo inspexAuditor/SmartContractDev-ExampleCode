@@ -21,7 +21,7 @@ describe("LowLevelCallErrorHandling", function () {
   describe("Deployment", () => {
     it("Deploy LowLevelCallErrorHandling contract", async () => {
       const { nativeBankManager, nativeBank, deployer, bob, alice } = await deploy();
-      expect(await nativeBankManager.balances(deployer.address) == ethers.utils.parseEther("10"));
+      expect(await nativeBankManager.balances(deployer.address)).to.equal(ethers.utils.parseEther("10"));
     });
   });
 

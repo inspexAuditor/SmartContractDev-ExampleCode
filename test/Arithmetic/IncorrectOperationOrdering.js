@@ -17,7 +17,7 @@ describe("IncorrectOperationOrdering", function () {
   describe("Deployment", () => {
     it("Deploy Counter contract", async () => {
       const { donate, deployer } = await deploy();
-      expect(await donate.owner() == deployer.address);
+      expect(await donate.owner()).to.be.equal(deployer.address);
     });
   });
 
