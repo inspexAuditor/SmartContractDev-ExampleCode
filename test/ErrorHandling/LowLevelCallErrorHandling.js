@@ -1,7 +1,7 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 
-describe("TokenErrorHandling", function () {
+describe("LowLevelCallErrorHandling", function () {
   
   async function deploy() {
     /// Get accounts
@@ -19,7 +19,7 @@ describe("TokenErrorHandling", function () {
   }
 
   describe("Deployment", () => {
-    it("Deploy TokenErrorHandling contract", async () => {
+    it("Deploy LowLevelCallErrorHandling contract", async () => {
       const { nativeBankManager, nativeBank, deployer, bob, alice } = await deploy();
       expect(await nativeBankManager.balances(deployer.address) == ethers.utils.parseEther("10"));
     });
