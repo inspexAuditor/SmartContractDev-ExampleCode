@@ -19,7 +19,7 @@ describe("AccessControlCustom", function () {
       const { donation, deployer } = await deploy();
       console.log(`deployer address  : ${await deployer.getAddress()}`);
       console.log(`contract owner: ${await donation.owner()}`);
-      expect(await donation.owner() == deployer);
+      expect(await donation.owner()).to.be.equal(deployer.address);
     });
   });
 
