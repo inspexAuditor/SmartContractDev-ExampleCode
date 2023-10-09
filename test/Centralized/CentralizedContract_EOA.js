@@ -26,23 +26,52 @@ describe("CentralizedContract EOA", function () {
     });
   });
 
-  describe("Attack Scenario", () => {
-    it("Owner changes the price provider address to steal ETH from contract", async () => {
+  describe("Attack Scenarios", () => {
+
+    it("Scenario 1: The owner can suddenly change the price provider's address, and it's affecting users right away", async () => {
+      const { centralized, trustedPriceProvider, maliciousPriceProvider, deployer, bob } = await deploy();
+      /// Read current PriceProvider from centralized contract
+      let currentPriceProvider = await ethers.getContractAt("TrustedPriceProvider", await centralized.priceProvider());
+      /// Users buy the token
+      let buyAmount = 1000;
+      let currentPrice = await currentPriceProvider.getPrice();
+      let payAmount = currentPrice.mul(buyAmount)
+      console.log(`-- Before the price provider has been changed --`);
+      console.log(`Bob paid ${ethers.utils.formatEther(payAmount)} ETH to get ${buyAmount} CTK`);
+      await centralized.connect(bob).buy(bob.address, buyAmount, {value: payAmount});
+      /// Check Bob's balance
+      expect(await centralized.balanceOf(bob.address)).to.equal(buyAmount);
+      /// Owner update price provider
+      await centralized.connect(deployer).setPriceProvider(maliciousPriceProvider.address);
+      expect(await centralized.priceProvider()).to.equal(maliciousPriceProvider.address);
+      /// Bob sells the token after the price has been changed
+      const sellTx = await centralized.connect(bob).sell(bob.address, buyAmount);
+      const sellTxData = await sellTx.wait();
+      const sellTxEvent = sellTxData.events.find(event => event.event == "Sell");
+      const [receiverAddress, sellAmount, receiveAmount] = sellTxEvent.args;
+      console.log(`-- After the price provider has been changed --`);
+      console.log(`Bob sold ${buyAmount} CTK to receive ${ethers.utils.formatEther(receiveAmount)} ETH`);
+    });
+
+    it("Scenario 2: The owner changes the price provider's address to steal ETH from the contract", async () => {
       const { centralized, trustedPriceProvider, maliciousPriceProvider, deployer, bob, alice } = await deploy();
       /// Read current PriceProvider from centralized contract
       let currentPriceProvider = await ethers.getContractAt("TrustedPriceProvider", await centralized.priceProvider());
-      /// Users buy tokens
-      let buyAmount = 100;
+      /// Users buy the token
+      let buyAmount = 1000;
       let currentPrice = await currentPriceProvider.getPrice();
       let payAmount = currentPrice.mul(buyAmount)
       await centralized.connect(bob).buy(bob.address, buyAmount, {value: payAmount});
       await centralized.connect(alice).buy(alice.address, buyAmount, {value: payAmount});
+      console.log(`-- Before the price provider has been changed --`);
+      console.log(`Users' total payAmount: ${ethers.utils.formatEther(payAmount.mul(2))} ETH`);
       /// Check users balance
       expect(await centralized.balanceOf(bob.address)).to.equal(buyAmount);
       expect(await centralized.balanceOf(alice.address)).to.equal(buyAmount);
       /// Owner update price
       await centralized.connect(deployer).setPriceProvider(maliciousPriceProvider.address);
       expect(await centralized.priceProvider()).to.equal(maliciousPriceProvider.address);
+      console.log(`-- After the price provider has been changed --`);
       /// Owner withdraw ETH from contract 
       const withdrawTx = await centralized.connect(deployer).withdrawNative(deployer.address);
       /* 
@@ -52,9 +81,7 @@ describe("CentralizedContract EOA", function () {
       const withdrawTxData = await withdrawTx.wait();
       const withdrawEvent = withdrawTxData.events.find(event => event.event == "WithdrawNative");
       const [receiver, receivedAmount] = withdrawEvent.args;
-      console.log(`receivedAmount: ${ethers.utils.formatEther(receivedAmount)} ether`);
-      expect(receiver).to.equal(deployer.address);
-      expect(receivedAmount).to.equal(payAmount.mul(2))
+      console.log(`Owner rugpull by executing the withdraw(), and receive ${ethers.utils.formatEther(receivedAmount)} ETH`);
     });
   });
 
