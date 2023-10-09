@@ -20,10 +20,10 @@ contract CounterV7SafeContract {
     } 
 
     function increase() external {
-        counter.add(1);
+        counter = counter.add(1);
     }
 
     function decrease() external {
-        counter.sub(1);
+        counter = counter.sub(1);
     }
 }
