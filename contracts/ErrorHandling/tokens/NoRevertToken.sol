@@ -8,7 +8,7 @@ contract NoRevertToken {
     uint public totalSupply;
     mapping(address => uint) public balanceOf;
     mapping(address => mapping(address => uint)) public allowance;
-    string public name = "NRT";
+    string public name = "NRvT";
     string public symbol = "NoRevertToken";
     uint8 public decimals = 18;
 
@@ -23,8 +23,7 @@ contract NoRevertToken {
             balanceOf[msg.sender] -= amount;
             balanceOf[recipient] += amount;
             return true;
-        }
-        
+        }  
     }
 
     function approve(address spender, uint amount) external returns (bool) {
