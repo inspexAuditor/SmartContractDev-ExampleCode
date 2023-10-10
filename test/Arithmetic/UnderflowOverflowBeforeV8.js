@@ -21,6 +21,10 @@ describe("UnderflowOverflowBeforeV8", function () {
       const { conterv7, conterv7Safe, deployer } = await deploy();
       expect(await conterv7.get()).to.equal(0);
       expect(await conterv7Safe.get()).to.equal(0);
+      await conterv7Safe.increase();
+      expect(await conterv7Safe.get()).to.equal(1);
+      await conterv7Safe.decrease();
+      expect(await conterv7Safe.get()).to.equal(0);
     });
   });
 

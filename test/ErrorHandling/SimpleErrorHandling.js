@@ -11,8 +11,7 @@ describe("SimpleErrorHandling", function () {
     const SimpleErrorHandlingContract = await ethers.getContractFactory("SimpleErrorHandlingContract");
     const simpleEH = await SimpleErrorHandlingContract.connect(deployer).deploy();
 
-    const newValue = 100;
-    await simpleEH.connect(deployer).setValue(newValue);
+    await simpleEH.connect(deployer).setValue(50);
 
     return { simpleEH, deployer };
   }
@@ -20,47 +19,30 @@ describe("SimpleErrorHandling", function () {
   describe("Deployment", () => {
     it("Deploy SimpleErrorHandling contract", async () => {
       const { simpleEH, deployer } = await deploy();
-      expect(await simpleEH.value()).to.be.equal(100);
+      expect(await simpleEH.value()).to.be.equal(50);
     });
   });
 
   describe("Test Error Handling", () => {
-    it("Revert - Case 1: invalid value", async () => {
+    it("Revert - Case 1: set the value to less than 10", async () => {
       const { simpleEH, deployer  } = await deploy();  
-      await expect(simpleEH.connect(deployer).setValue(10)).to.be.rejectedWith("Value cannot be 10");
+      await expect(simpleEH.connect(deployer).setValue(9)).to.be.revertedWith("Value must be in range 10-100");
     });
 
-    it("Revert - Case 2: valid value", async () => {
+    it("Revert - Case 2: set the value to more than 100", async () => {
       const { simpleEH, deployer  } = await deploy();  
-      const newValue = 5;
-      await simpleEH.connect(deployer).setValue(newValue);
-      expect(await simpleEH.value()).to.be.equal(newValue);
+      await expect(simpleEH.connect(deployer).setValue(101)).to.be.revertedWithCustomError(simpleEH, "ValueOutOfRange");
     });
 
-    it("Require - Case 1: amount > value", async () => {
+    it("Require - Case 1: the new value is less than 10", async () => {
       const { simpleEH, deployer } = await deploy();
-      await expect(simpleEH.connect(deployer).decrementValue(101)).to.be.reverted;
+      await expect(simpleEH.connect(deployer).decreseValue(41)).to.be.revertedWith("Value must be in range 10-100");
     });
 
-    it("Require - Case 2: amount <= value", async () => {
+    it("Assert - Case 1: the new value is more than 100", async () => {
       const { simpleEH, deployer } = await deploy();
-      await simpleEH.connect(deployer).decrementValue(99); /// 100 - 99 = 1
-      await simpleEH.connect(deployer).decrementValue(1);  /// 1 - 1 = 0
+      await expect(simpleEH.connect(deployer).increaseValue(51)).to.be.revertedWithPanic("0x01"); // 0x01 is assert's error code
     });
-
-    it("Assert - Case 1: amount == 0", async () => {
-      const { simpleEH, deployer } = await deploy();
-      await expect(simpleEH.connect(deployer).incrementValue(0)).to.be.rejected;
-    });
-
-    it("Assert - Case 1: amount > 0", async () => {
-      const { simpleEH, deployer } = await deploy();
-      const amount = 1337;
-      const currentValue = await simpleEH.value();
-      const expectedNewValue = currentValue.add(amount);
-      expect(await simpleEH.connect(deployer).incrementValue(amount) == expectedNewValue);
-    });
-
   });
 
 });

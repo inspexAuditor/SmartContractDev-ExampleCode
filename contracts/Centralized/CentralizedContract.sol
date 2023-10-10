@@ -13,6 +13,8 @@ contract CentralizedContract is ERC20, Ownable {
     uint256 public currentSupply;
     IPriceProvider public priceProvider;
 
+    event Buy(address receiver, uint256 payAmount, uint256 receiveAmount);
+    event Sell(address receiver, uint256 sellAmount, uint256 receiveAmount);
     event WithdrawNative(address indexed recevier, uint256 indexed amount);
 
     constructor(address _priceProvider) ERC20("Centralized Token", "CTK") {
@@ -49,6 +51,7 @@ contract CentralizedContract is ERC20, Ownable {
         /// Transfer token to `_to` address
         currentSupply += _amount;
         _transfer(address(this), _buyFor, _amount);
+        emit Buy(_buyFor, total, _amount);
     }
 
     function sell(address _receiver, uint256 _amount) external {
@@ -63,6 +66,7 @@ contract CentralizedContract is ERC20, Ownable {
         _transfer(msg.sender, address(this), _amount);
         (bool sent, ) = (_receiver).call{value: total}("");
         require(sent, "Failed to send Ether");
+        emit Sell(_receiver, _amount, total);
     }
 
 }
@@ -79,6 +83,7 @@ contract TrustedPriceProvider {
 
 contract MaliciousPriceProvider {
     function getPrice() external pure returns(uint256) {
-        return 0;
+        ///Very low price
+        return 0.0000001 ether;
     }
 }
