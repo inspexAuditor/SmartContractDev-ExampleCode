@@ -46,7 +46,6 @@ contract TokenErrorHandlingContract {
         balances[_token][msg.sender] -= _amount;
         bytes memory data = abi.encodeCall(IToken.transfer, (msg.sender, _amount));
         (bool success, bytes memory returndata) = _token.call(data); /// execute transferFrom
-        // bool success = IToken(_token).transfer(msg.sender, _amount);
         require(success && (returndata.length == 0 || abi.decode(returndata, (bool))) && address(_token).code.length > 0,                              /// Token's address must be a contract
             "transferFrom failed"
         );
