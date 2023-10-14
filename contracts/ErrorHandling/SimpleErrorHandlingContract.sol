@@ -6,23 +6,29 @@ pragma solidity ^0.8.9;
 
 contract SimpleErrorHandlingContract {
 
+    error ValueOutOfRange(uint256 lowerBound, uint256 upperBound);
+
     uint256 public value;
 
     function setValue(uint256 _value) external {
-        if (_value == 10){
-            revert("Value cannot be 10");
+        if (_value < 10){
+            revert("Value must be in range 10-100"); // revert with reason string
+        }
+        else if(_value > 100){
+            revert ValueOutOfRange(1,100);  // revert with custon error
         }
         value = _value;
     }
 
-    function decrementValue(uint _amount) external {
-        require(_amount <= value, "Insufficient value");
-        value -= _amount;
+    function decreseValue(uint256 _amount) external {
+        uint256 newValue = value - _amount;
+        require(newValue >= 10, "Value must be in range 10-100");
+        value = newValue;
     }
 
-    function incrementValue(uint _amount) external {
-        uint oldValue = value;
-        value += _amount;
-        assert(value > oldValue);
+    function increaseValue(uint256 _amount) external {
+        uint256 newValue = value + _amount;
+        assert(newValue <= 100);
+        value = newValue;
     }
 }

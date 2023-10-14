@@ -18,9 +18,18 @@ describe("Hashing and encoding", function () {
     return { hashContract, part1, part2, salt, randomBytes, randomBytes32 };
   }
 
+  function prettyPrintBytes(data) {
+    const rows = (data.length-2)/2/32;
+    for(let i=0;i<rows;i++){
+      let row_data = ethers.utils.hexDataSlice(data, 32*i, 32*(i)+32);
+      console.log(`    ${i<10?"0"+i:i}: ${row_data}`);
+    }
+  } 
+
   describe("Differences result between encode() and encodePacked()", () => {
     it("Encode vs EncodePacked", async () => {
       const { hashContract, part1, part2, salt, randomBytes, randomBytes32 } = await deploy();
+      ///Compare hash result
       const hashEncode = await hashContract.getHashEncode(part1, part2, salt, randomBytes, randomBytes32);
       const hashEncodePacked = await hashContract.getHashEncodePacked(part1, part2, salt, randomBytes, randomBytes32);
       const newPart1 = "has";
@@ -33,6 +42,24 @@ describe("Hashing and encoding", function () {
       console.log(`--- "has"+"hme"+salt+randomBytes+randomBytes32 ---`);
       console.log(`newHashEncode      : ${newHashEncode}`);
       console.log(`newHashEncodePacked: ${newHashEncodePacked}`);
+      ///Compare bytes data
+      const encodeBytesData = await hashContract.getEncode(part1, part2, salt, randomBytes, randomBytes32);
+      const encodePackedBytesData = await hashContract.getEncodePacked(part1, part2, salt, randomBytes, randomBytes32);
+      const newEncodeBytesData = await hashContract.getEncode(newPart1, newPart2, salt, randomBytes, randomBytes32);
+      const newEncodePackedBytesData = await hashContract.getEncodePacked(newPart1, newPart2, salt, randomBytes, randomBytes32);
+      console.log(`--- Bytes data after encode vs encode Packed ---`);
+      console.log(`data1: "hash"+"me"+salt+randomBytes+randomBytes32`);
+      console.log(`data2: "has"+"hme"+salt+randomBytes+randomBytes32`);
+      console.log(`encode(data1) :`);
+      prettyPrintBytes(encodeBytesData);
+      console.log(`encode(data2) :`);
+      prettyPrintBytes(newEncodeBytesData);
+      console.log(`encodePacked(data1) :`);
+      prettyPrintBytes(encodePackedBytesData);
+      console.log(`encodePacked(data2) :`);
+      prettyPrintBytes(newEncodePackedBytesData);
+      expect(encodeBytesData).to.not.equal(newEncodeBytesData);
+      expect(encodePackedBytesData).to.equal(newEncodePackedBytesData);
     });
   });
 
@@ -48,8 +75,10 @@ describe("Hashing and encoding", function () {
       /// Retrive hash from contract
       const encodedDataFromContract = await hashContract.getEncode(part1, part2, salt, randomBytes, randomBytes32);
       const hashFromContract = await hashContract.getHashEncode(part1, part2, salt, randomBytes, randomBytes32);
-      console.log(`data from JS      : ${encodedDataFromJS}`);
-      console.log(`data from contract: ${encodedDataFromContract}`);
+      console.log(`data from JS      :`);
+      prettyPrintBytes(encodedDataFromJS);
+      console.log(`data from contract:`);
+      prettyPrintBytes(encodedDataFromContract);
       console.log(`hash from JS      : ${hashFromJS}`);
       console.log(`hash from contract: ${hashFromContract}`);
       expect(encodedDataFromJS).to.eq(encodedDataFromContract);
@@ -70,8 +99,10 @@ describe("Hashing and encoding", function () {
       /// Retrive hash from contract
       const encodedDataFromContract = await hashContract.getEncodePacked(part1, part2, salt, randomBytes, randomBytes32);
       const hashFromContract = await hashContract.getHashEncodePacked(part1, part2, salt, randomBytes, randomBytes32);
-      console.log(`data from JS      : ${encodedDataFromJS}`);
-      console.log(`data from contract: ${encodedDataFromContract}`);
+      console.log(`data from JS      :`);
+      prettyPrintBytes(encodedDataFromJS);
+      console.log(`data from contract:`);
+      prettyPrintBytes(encodedDataFromContract);
       console.log(`hash from JS      : ${hashFromJS}`);
       console.log(`hash from contract: ${hashFromContract}`);
       expect(encodedDataFromJS).to.eq(encodedDataFromContract);
