@@ -12,8 +12,7 @@ contract EventTicket is ERC721, ERC721Enumerable, ERC721Burnable, Ownable {
     using Counters for Counters.Counter;
 
     //Sale States
-    bool public isAllowListActive = false;
-    mapping(address => bool) public mintClaimed; // Check that the NFT is Claimed?
+    mapping(bytes => bool) public voucherClaimed; // Check that the NFT is Claimed?
 
     //Privates
     string private _baseURIextended;
@@ -57,11 +56,6 @@ contract EventTicket is ERC721, ERC721Enumerable, ERC721Burnable, Ownable {
         return super.supportsInterface(interfaceId);
     }
 
-    //Allowed Minting
-    function setIsAllowListActive(bool _isAllowListActive) external onlyOwner {
-        isAllowListActive = _isAllowListActive;
-    }
-
     function setSigner(address _signer) external onlyOwner {
         signer = _signer;
     }
@@ -71,8 +65,7 @@ contract EventTicket is ERC721, ERC721Enumerable, ERC721Burnable, Ownable {
         bytes calldata _voucher
     ) external payable {
         uint256 ts = totalSupply();
-        require(isAllowListActive, "Allow list is not active");
-        require(!mintClaimed[_address], "Already claimed mint");
+        require(!voucherClaimed[_voucher], "The voucher Already Claimed");
         require(ts + 1 <= MAX_SUPPLY, "Purchase would exceed max tokens");
         require(
             msg.value >= PRICE_PER_TOKEN,
@@ -81,12 +74,12 @@ contract EventTicket is ERC721, ERC721Enumerable, ERC721Burnable, Ownable {
         require(msg.sender == _address, "Not your voucher");
 
         bytes32 hash = keccak256(abi.encodePacked(_address));
-        require(_verifySignature(signer, hash, _voucher), "Invalid voucher");
+        // require(_verifySignature(signer, hash, _voucher), "Invalid voucher");
+        require(verify(signer, hash, _voucher), "Invalid voucher");
 
-        mintClaimed[_address] = true;
-        uint256 tokenId = _tokenIdCounter.current();
+        voucherClaimed[_voucher] = true;
         _tokenIdCounter.increment();
-        _safeMint(_address, tokenId);
+        _safeMint(_address, _tokenIdCounter.current());
     }
 
     function _verifySignature(
@@ -99,24 +92,6 @@ contract EventTicket is ERC721, ERC721Enumerable, ERC721Burnable, Ownable {
             ECDSA.recover(ECDSA.toEthSignedMessageHash(_hash), _signature);
     }
 
-    //
-
-    //Overrides
-    function setBaseURI(string memory baseURI_) external onlyOwner {
-        _baseURIextended = baseURI_;
-    }
-
-    function _baseURI() internal view virtual override returns (string memory) {
-        return _baseURIextended;
-    }
-
-    //
-
-    function reserve() public onlyOwner {
-        require(totalSupply() == 0, "Tokens already reserved");
-        _safeMint(msg.sender, RESERVE_COUNT);
-    }
-
     //Withdraw balance
     function withdraw() public onlyOwner {
         uint256 balance = address(this).balance;
@@ -125,9 +100,7 @@ contract EventTicket is ERC721, ERC721Enumerable, ERC721Burnable, Ownable {
 
     //
 
-    function getMessageHash(
-        address _address
-    ) public pure returns (bytes32) {
+    function getMessageHash(address _address) public pure returns (bytes32) {
         return keccak256(abi.encodePacked(_address));
     }
 
@@ -149,13 +122,10 @@ contract EventTicket is ERC721, ERC721Enumerable, ERC721Burnable, Ownable {
 
     function verify(
         address _signer,
-        address _to,
-        uint _amount,
-        string memory _message,
-        uint _nonce,
+        bytes32 _hash,
         bytes memory signature
     ) public pure returns (bool) {
-        bytes32 messageHash = getMessageHash(_to);
+        bytes32 messageHash = _hash;
         bytes32 ethSignedMessageHash = getEthSignedMessageHash(messageHash);
 
         return recoverSigner(ethSignedMessageHash, signature) == _signer;
@@ -193,11 +163,8 @@ contract EventTicket is ERC721, ERC721Enumerable, ERC721Burnable, Ownable {
             v := byte(0, mload(add(sig, 96)))
         }
 
-
         // implicitly return (r, s, v)
     }
-
-    
 
     function getMalleabilitySignature(
         bytes memory sig
@@ -214,9 +181,7 @@ contract EventTicket is ERC721, ERC721Enumerable, ERC721Burnable, Ownable {
         return abi.encodePacked(r, s, v);
     }
 
-        function getRSV(
-        bytes memory sig
-    ) public pure returns (bytes32 r) {
+    function getRSV(bytes memory sig) public pure returns (bytes32 r) {
         (bytes32 r, bytes32 s, uint8 v) = splitSignature(sig);
 
         if (v == 27) v++;
