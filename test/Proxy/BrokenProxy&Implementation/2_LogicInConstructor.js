@@ -29,6 +29,7 @@ describe("LogicInConstructor", function () {
       const proxyToProblem_as_ProblemImple = LogicInConstructorProblem.attach(proxyToProblem.address);
       // Get version's value from proxy's storage
       const version = await proxyToProblem_as_ProblemImple.getVersion();
+      console.log(`-- Current value in proxy's storage --`);
       console.log(`version: ${version}`);
       // Expected to be 0 (or equal to not set), because the version state variable was set in the constructor.
       expect(version).to.not.equal(1);
@@ -43,6 +44,7 @@ describe("LogicInConstructor", function () {
       await proxyToSolution_as_SolutionImple.initialize(version);
       // Get version's value from proxy
       const versionInStorage = await proxyToSolution_as_SolutionImple.getVersion();
+      console.log(`-- Current value in proxy's storage --`);
       console.log(`version: ${versionInStorage}`);
     });
   });
