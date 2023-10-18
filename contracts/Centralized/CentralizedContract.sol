@@ -13,9 +13,9 @@ contract CentralizedContract is ERC20, Ownable {
     uint256 public currentSupply;
     IPriceProvider public priceProvider;
 
-    event Buy(address receiver, uint256 payAmount, uint256 receiveAmount);
-    event Sell(address receiver, uint256 sellAmount, uint256 receiveAmount);
-    event WithdrawNative(address indexed recevier, uint256 indexed amount);
+    event Buy(address indexed receiver , uint256 payAmount, uint256 receiveAmount);
+    event Sell(address indexed receiver, uint256 sellAmount, uint256 receiveAmount);
+    event WithdrawNative(address indexed recevier, uint256 amount);
 
     constructor(address _priceProvider) ERC20("Centralized Token", "CTK") {
         _mint(address(this), limitSupply);
