@@ -6,7 +6,7 @@ pragma solidity ^0.8.9;
 
 import "../3_UnexpectedReinitiazation/SimpleInitializable.sol";
 
-contract ImplementationBeforeUpgrade is SimpleInitializable {
+contract UninitializedImplementationSolution is SimpleInitializable {
 
     /// Immutable variables
     uint256 public immutable immutableVariable;
@@ -20,9 +20,8 @@ contract ImplementationBeforeUpgrade is SimpleInitializable {
         _disableInitializer();
     }
 
-    function initialize(uint256 version, address admin) public initializer {
+    function initialize(uint256 version) public initializer {
         _version = version;
-        _admin = admin;
     }
 
     function getVersion() external view returns (uint256) {
@@ -35,6 +34,10 @@ contract ImplementationBeforeUpgrade is SimpleInitializable {
 
     function setAdmin(address newAdmin) external {
         _admin = newAdmin;
+    }
+
+    function setAdminButDelegatecall(address target) external {
+        /// This function should be removed
     }
 
 }

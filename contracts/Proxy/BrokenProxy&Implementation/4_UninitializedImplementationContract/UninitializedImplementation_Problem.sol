@@ -6,7 +6,7 @@ pragma solidity ^0.8.9;
 
 import "../3_UnexpectedReinitiazation/SimpleInitializable.sol";
 
-contract ImplementationBeforeUpgrade is SimpleInitializable {
+contract UninitializedImplementationProblem is SimpleInitializable {
 
     /// Immutable variables
     uint256 public immutable immutableVariable;
@@ -15,14 +15,11 @@ contract ImplementationBeforeUpgrade is SimpleInitializable {
     address private _admin;
 
     constructor(uint256 number) {
-        /// The constructor should only contain definitions of immutable variables or disable the initializer
         immutableVariable = number;
-        _disableInitializer();
     }
 
-    function initialize(uint256 version, address admin) public initializer {
+    function initialize(uint256 version) public initializer {
         _version = version;
-        _admin = admin;
     }
 
     function getVersion() external view returns (uint256) {
@@ -35,6 +32,16 @@ contract ImplementationBeforeUpgrade is SimpleInitializable {
 
     function setAdmin(address newAdmin) external {
         _admin = newAdmin;
+    }
+
+    function setAdminButDelegatecall(address target, address newAdmin) external {
+        (bool success, ) = target.delegatecall(
+            abi.encodeWithSignature(
+                "getAdmin(address)", 
+                newAdmin
+            )
+        );
+        require(success, "delegatecall failed");
     }
 
 }

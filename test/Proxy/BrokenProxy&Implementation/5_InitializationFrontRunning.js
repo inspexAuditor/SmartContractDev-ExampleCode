@@ -1,5 +1,4 @@
 const { expect } = require("chai");
-const { arrayify } = require("ethers/lib/utils");
 const { ethers } = require("hardhat");
 
 describe("InitializationFrontRunning", function () {
@@ -9,10 +8,10 @@ describe("InitializationFrontRunning", function () {
     let [deployer, admin, attacker] = await ethers.getSigners();
 
     /// Deploy testing contracts
-    const ImplementationWithIntializer = await ethers.getContractFactory("ImplementationWithIntializer");
+    const UninitializedImplementationSolution = await ethers.getContractFactory("UninitializedImplementationSolution");
     const ProxyWithSimpleInitializable = await ethers.getContractFactory("ProxyWithSimpleInitializable");
     
-    const implementation = await ImplementationWithIntializer.connect(deployer).deploy(10);
+    const implementation = await UninitializedImplementationSolution.connect(deployer).deploy(10);
     const proxyWithoutUpgradeToAndCall = await ProxyWithSimpleInitializable.connect(deployer).deploy(implementation.address);
     
     return { proxyWithoutUpgradeToAndCall, implementation, deployer, admin, attacker };
@@ -25,8 +24,8 @@ describe("InitializationFrontRunning", function () {
   describe("Test initialization front-running", () => {
     it("Problem: Attacker can front-run the tx that execute the initialize() function.", async () => {
       const {  proxyWithoutUpgradeToAndCall, implementation, deployer, admin, attacker } = await deploy();
-      const LogicInConstructorSolution = await ethers.getContractFactory("LogicInConstructorSolution");
-      const proxyWithReinitializableProblem_as_implementation = LogicInConstructorSolution.attach(proxyWithoutUpgradeToAndCall.address);
+      const UninitializedImplementationSolution = await ethers.getContractFactory("UninitializedImplementationSolution");
+      const proxyWithReinitializableProblem_as_implementation = UninitializedImplementationSolution.attach(proxyWithoutUpgradeToAndCall.address);
       // Admin execute the initialize() function after upgrade to a implementation contract
       const version = 1;
       const attackerVersion = 1337;
@@ -47,8 +46,8 @@ describe("InitializationFrontRunning", function () {
       // Upgarde and call initialize() in a TX
       const proxyWithUpgradeToAndCall = await ProxyWithUpgradeToAndCall.connect(deployer).deploy(implementation.address, data);
       // Verify the result
-      const LogicInConstructorSolution = await ethers.getContractFactory("LogicInConstructorSolution");
-      const proxyWithUpgradeToAndCall_as_implementation = LogicInConstructorSolution.attach(proxyWithUpgradeToAndCall.address);
+      const UninitializedImplementationSolution = await ethers.getContractFactory("UninitializedImplementationSolution");
+      const proxyWithUpgradeToAndCall_as_implementation = UninitializedImplementationSolution.attach(proxyWithUpgradeToAndCall.address);
       console.log(`version: ${await proxyWithUpgradeToAndCall_as_implementation.getVersion()}`);
       const implementationSlot = await ethers.provider.getStorageAt(
         proxyWithUpgradeToAndCall.address, 
