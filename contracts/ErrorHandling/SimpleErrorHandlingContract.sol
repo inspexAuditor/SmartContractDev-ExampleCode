@@ -15,7 +15,7 @@ contract SimpleErrorHandlingContract {
             revert("Value must be in range 10-100"); // revert with reason string
         }
         else if(_value > 100){
-            revert ValueOutOfRange(1,100);  // revert with custon error
+            revert ValueOutOfRange(1,100);  // revert with custom error
         }
         value = _value;
     }
