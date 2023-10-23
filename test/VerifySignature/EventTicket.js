@@ -21,37 +21,95 @@ function splitSignature(sig) {
 }
 
 function getMalleabilitySignature(sig) {
-  const { r, s, v } = splitSignature(sig);
+  let { r, s, v } = ethers.utils.splitSignature(sig);
 
-  let adjustedV = ethers.BigNumber.from(v).toNumber();
-  if (adjustedV === 27) adjustedV++;
-  else if (adjustedV === 28) adjustedV--;
+  if (v == 27) v++;
+  else if (v == 28) v--;
 
+  const N = ethers.BigNumber.from("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141");
   const sBN = ethers.BigNumber.from(s);
-  const malsigS = ethers.constants.MaxUint256.sub(sBN).toHexString();
+  const malsigS = N.sub(sBN).toHexString();
 
-  const malsig = ethers.utils.defaultAbiCoder.encode(['bytes32', 'bytes32', 'uint8'], [r, malsigS, adjustedV]);
+  const malsig = ethers.utils.solidityPack(['bytes32', 'bytes32', 'uint8'], [r, malsigS, v]);
   return malsig;
 }
 
 
+async function deploy() {
+  /// Get accounts
+  let [deployer, otherAccount] = await ethers.getSigners();
+
+  /// Deploy testing contracts
+  const EventTicket = await ethers.getContractFactory("EventTicket");
+  const eventTicket = await EventTicket.connect(deployer).deploy();
+
+  return { eventTicket, deployer, otherAccount };
+}
 
 
+describe("Ownable", function () {
 
+  it('should not allow external access to internalFunction', async () => {
+    const { eventTicket, otherAccount } = await deploy();
+    try {
+      await eventTicket._transferOwnership(otherAccount.address);
+      expect.fail("Expected to throw");
+    } catch (error) {
+      expect(error.message).to.include('eventTicket._transferOwnership is not a function');
+    }
+  });
 
+  // Preventing Unauthorized Ownership Transfer:
+  it("Unauthorized ownership transfer should revert", async () => {
+    const { eventTicket, deployer, otherAccount } = await deploy();
+
+    // Attempt to transfer ownership from otherAccount and expect it to revert
+    await expect(eventTicket.connect(otherAccount).transferOwnership(deployer.address)).to.be.revertedWith('Ownable: caller is not the owner');
+  });
+
+  // Transfer Ownership:
+  it("Owner should be able to transfer ownership to another account", async () => {
+    const { eventTicket, deployer, otherAccount } = await deploy();
+
+    // Transfer ownership to otherAccount
+    await eventTicket.connect(deployer).transferOwnership(otherAccount.address);
+
+    // Verify that the new owner is now otherAccount
+    const newOwner = await eventTicket.owner();
+    expect(newOwner).to.equal(otherAccount.address);
+  });
+
+  // Renouncing Ownership
+  it("Owner should be able to renounce ownership", async () => {
+    const { eventTicket, deployer } = await deploy();
+
+    // Renounce ownership
+    await eventTicket.connect(deployer).renounceOwnership();
+
+    // Verify that the owner is now the zero address
+    const newOwner = await eventTicket.owner();
+    expect(newOwner).to.equal("0x0000000000000000000000000000000000000000");
+  });
+
+  // Preventing Zero-Address Ownership Transfer:
+  it("Ownership transfer to zero address should revert", async () => {
+    const { eventTicket, deployer } = await deploy();
+
+    // Attempt to transfer ownership to the zero address and expect it to revert
+    await expect(eventTicket.connect(deployer).transferOwnership("0x0000000000000000000000000000000000000000")).to.be.revertedWith('Ownable: new owner is the zero address');
+  });
+
+  // Verify Owner Modifier:
+  it("Function with onlyOwner modifier should only be callable by the owner", async () => {
+    const { eventTicket, deployer, otherAccount } = await deploy();
+
+    // Attempt to call a function with onlyOwner modifier from otherAccount and expect it to revert
+    await expect(eventTicket.connect(otherAccount).setSigner(otherAccount.address)).to.be.revertedWith('Ownable: caller is not the owner');
+  });
+
+});
 
 describe("EventTicket", function () {
-
-  async function deploy() {
-    /// Get accounts
-    let [deployer, otherAccount] = await ethers.getSigners();
-
-    /// Deploy testing contracts
-    const EventTicket = await ethers.getContractFactory("EventTicket");
-    const eventTicket = await EventTicket.connect(deployer).deploy();
-
-    return { eventTicket, deployer, otherAccount };
-  }
 
   describe("Deployment", () => {
     it("Deploy VerifySignature contract", async () => {
@@ -67,9 +125,6 @@ describe("EventTicket", function () {
 
       // Define test inputs
       const to = otherAccount.address;
-      const amount = 123;
-      const message = "Hello, world!";
-      const nonce = 1;
 
       // Calculate the expected message hash
       const expectedHash = ethers.utils.solidityKeccak256(
@@ -115,9 +170,6 @@ describe("EventTicket", function () {
       const signer = deployer.address;
       console.log("signer", signer)
       const to = otherAccount.address;
-      const amount = 123;
-      const message = 'Hello, world!';
-      const nonce = 1;
       const messageHash = await eventTicket.getMessageHash(to);
       console.log("1) getMessageHash:", messageHash);
       const getEthSignedMessageHash = await eventTicket.getEthSignedMessageHash(messageHash);
@@ -135,9 +187,6 @@ describe("EventTicket", function () {
     const signer = deployer.address;
     console.log("signer", signer)
     const to = otherAccount.address;
-    const amount = 123;
-    const message = 'Hello, world!';
-    const nonce = 1;
     const messageHash = await eventTicket.getMessageHash(to);
     console.log("1) getMessageHash:", messageHash);
     const getEthSignedMessageHash = await eventTicket.getEthSignedMessageHash(messageHash);
@@ -177,7 +226,7 @@ describe("EventTicket", function () {
 
 
     const malsig = getMalleabilitySignature(signature);
-    console.log("SignatureMalleabilityJS",malsig);
+    console.log("SignatureMalleabilityJS", malsig);
 
 
 
@@ -191,12 +240,12 @@ describe("EventTicket", function () {
     //   value: parseEther("1"),
     // });
 
-    const mintAllowList2 = await eventTicket.connect(otherAccount).mintAllowList(otherAccount.address, SignatureMalleability, {
+    const mintAllowList2 = await eventTicket.connect(otherAccount).mintAllowList(otherAccount.address, malsig, {
       value: parseEther("1"),
     });
     // console.log("mintAllowList", mintAllowList)
     console.log("totalSupply after", await eventTicket.totalSupply())
-    
+
     const result = await eventTicket.verify(signer, messageHash, signature);
     expect(result, 'Signature is not valid').to.be.true
   });

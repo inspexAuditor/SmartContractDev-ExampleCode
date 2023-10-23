@@ -7,6 +7,8 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
+
 
 contract EventTicket is ERC721, ERC721Enumerable, ERC721Burnable, Ownable {
     using Counters for Counters.Counter;
@@ -21,7 +23,6 @@ contract EventTicket is ERC721, ERC721Enumerable, ERC721Burnable, Ownable {
     //Constants
     uint256 public constant MAX_SUPPLY = 555;
     uint256 public constant PRICE_PER_TOKEN = 1 ether;
-    uint256 public constant RESERVE_COUNT = 55;
 
     Counters.Counter public _tokenIdCounter;
 
@@ -166,31 +167,5 @@ contract EventTicket is ERC721, ERC721Enumerable, ERC721Burnable, Ownable {
         // implicitly return (r, s, v)
     }
 
-    function getMalleabilitySignature(
-        bytes memory sig
-    ) public pure returns (bytes memory malsig) {
-        (bytes32 r, bytes32 s, uint8 v) = splitSignature(sig);
 
-        if (v == 27) v++;
-        else if (v == 28) v--;
-
-        s = bytes32(
-            0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141 -
-                uint256(s)
-        );
-        return abi.encodePacked(r, s, v);
-    }
-
-    function getRSV(bytes memory sig) public pure returns (bytes32 r) {
-        (bytes32 r, bytes32 s, uint8 v) = splitSignature(sig);
-
-        if (v == 27) v++;
-        else if (v == 28) v--;
-
-        s = bytes32(
-            0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141 -
-                uint256(s)
-        );
-        return s;
-    }
 }
