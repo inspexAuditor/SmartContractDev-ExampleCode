@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract Marketplace2 is Ownable {
+contract Marketplace2CrossContractSigReplay is Ownable {
     using ECDSA for bytes32;
     mapping(address => mapping(uint256 => bool)) public usedNonce;
 

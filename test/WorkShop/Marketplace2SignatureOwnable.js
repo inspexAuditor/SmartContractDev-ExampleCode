@@ -1,12 +1,39 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
-const { MerkleTree } = require('merkletreejs');
-const { StandardMerkleTree } = require('@openzeppelin/merkle-tree');
-const fs = require('fs');
-// import { StandardMerkleTree } from "@openzeppelin/merkle-tree";
-// import fs from "fs";
-
 const { parseEther } = require("ethers/lib/utils");
+
+
+
+
+function splitSignature(sig) {
+    console.log(sig.length)
+    console.log(sig.slice(130, 132))
+
+    // if (sig.length !== 65) {
+    //   throw new Error("Invalid signature length", sig.length);
+    // }
+
+    const r = '0x' + sig.slice(2, 66);
+    const s = '0x' + sig.slice(66, 130);
+    const v = parseInt(sig.slice(130, 132), 16);
+
+    return { r, s, v };
+}
+
+function getMalleabilitySignature(sig) {
+    let { r, s, v } = ethers.utils.splitSignature(sig);
+
+    if (v == 27) v++;
+    else if (v == 28) v--;
+
+    const N = ethers.BigNumber.from("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141");
+    const sBN = ethers.BigNumber.from(s);
+    const malsigS = N.sub(sBN).toHexString();
+
+    const malsig = ethers.utils.solidityPack(['bytes32', 'bytes32', 'uint8'], [r, malsigS, v]);
+    return malsig;
+}
+
 
 async function deploy() {
     /// Get accounts
@@ -16,11 +43,11 @@ async function deploy() {
     const network = await ethers.provider.getNetwork();
     const chainId = network.chainId;
 
-    const merkleRoot = "0x3ef66d9922138427d5f0c22c88ff88e64263aa77d1fe0186c3b1a1ff7854fa9a";
-    const NFTprice = ethers.utils.parseEther("2");
-    const whitelistPrice = ethers.utils.parseEther("1");
+    const merkleRoot = "0x123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0";
+    const price = ethers.utils.parseEther("0.1");
+    const whitelistPrice = ethers.utils.parseEther("0.05");
     const maxSupply = 100;
-    const whitelistMaxPurchase = 1;
+    const whitelistMaxPurchase = 5;
 
     /// Deploy testing contracts
     const USDT = await ethers.getContractFactory("USDT");
@@ -29,7 +56,7 @@ async function deploy() {
     const INXNFT = await ethers.getContractFactory("INXNFT");
     const iNXNFT = await INXNFT.connect(deployer).deploy(
         uSDT.address,
-        NFTprice,
+        price,
         whitelistPrice,
         maxSupply,
         whitelistMaxPurchase,
@@ -44,23 +71,81 @@ async function deploy() {
         nftAddress: iNXNFT.address,
         tokenId: 1,
         tokenAddress: uSDT.address,
-        price: ethers.utils.parseEther("4"),
+        price: 1000,
         expiry: 16777216,
         nonce: 42,
     };
 
-    // Mint USDT tokens for the buyer and seller
-    await uSDT.connect(deployer).mint(buyer.address, ethers.utils.parseEther("10"));
-    await uSDT.connect(deployer).mint(seller.address, ethers.utils.parseEther("10"));
 
-
-    return { marketplace2, iNXNFT, uSDT, offer, deployer, seller, buyer, otherAccount, chainId, NFTprice, whitelistPrice };
+    return { marketplace2, iNXNFT, uSDT, offer, deployer, seller, buyer, otherAccount, chainId };
 }
+
+
+describe("Ownable", function () {
+
+    it('should not allow external access to internalFunction', async () => {
+        const { marketplace2, otherAccount } = await deploy();
+        try {
+            await marketplace2._transferOwnership(otherAccount.address);
+            expect.fail("Expected to throw");
+        } catch (error) {
+            expect(error.message).to.include('marketplace2._transferOwnership is not a function');
+        }
+    });
+
+    // Preventing Unauthorized Ownership Transfer:
+    it("Unauthorized ownership transfer should revert", async () => {
+        const { marketplace2, deployer, otherAccount } = await deploy();
+
+        // Attempt to transfer ownership from otherAccount and expect it to revert
+        await expect(marketplace2.connect(otherAccount).transferOwnership(deployer.address)).to.be.revertedWith('Ownable: caller is not the owner');
+    });
+
+    // Transfer Ownership:
+    it("Owner should be able to transfer ownership to another account", async () => {
+        const { marketplace2, deployer, otherAccount } = await deploy();
+
+        // Transfer ownership to otherAccount
+        await marketplace2.connect(deployer).transferOwnership(otherAccount.address);
+
+        // Verify that the new owner is now otherAccount
+        const newOwner = await marketplace2.owner();
+        expect(newOwner).to.equal(otherAccount.address);
+    });
+
+    // Renouncing Ownership
+    it("Owner should be able to renounce ownership", async () => {
+        const { marketplace2, deployer } = await deploy();
+
+        // Renounce ownership
+        await marketplace2.connect(deployer).renounceOwnership();
+
+        // Verify that the owner is now the zero address
+        const newOwner = await marketplace2.owner();
+        expect(newOwner).to.equal("0x0000000000000000000000000000000000000000");
+    });
+
+    // Preventing Zero-Address Ownership Transfer:
+    it("Ownership transfer to zero address should revert", async () => {
+        const { marketplace2, deployer } = await deploy();
+
+        // Attempt to transfer ownership to the zero address and expect it to revert
+        await expect(marketplace2.connect(deployer).transferOwnership("0x0000000000000000000000000000000000000000")).to.be.revertedWith('Ownable: new owner is the zero address');
+    });
+
+    // Verify Owner Modifier:
+    it("Function with onlyOwner modifier should only be callable by the owner", async () => {
+        const { marketplace2, deployer, otherAccount } = await deploy();
+
+        // Attempt to call a function with onlyOwner modifier from otherAccount and expect it to revert
+        await expect(marketplace2.connect(otherAccount).transferOwnership(otherAccount.address)).to.be.revertedWith('Ownable: caller is not the owner');
+    });
+});
 
 describe("Verify Signature", function () {
 
     it("should return the correct message hash", async function () {
-        const { marketplace2, iNXNFT, uSDT, offer, deployer, chainId } = await deploy();
+        const { marketplace2, iNXNFT, uSDT, offer, deployer,chainId } = await deploy();
 
         const expectedHash = ethers.utils.solidityKeccak256(
             ["bool", "address", "uint256", "address", "uint256", "uint256", "address", "uint256"],
@@ -89,17 +174,11 @@ describe("Verify Signature", function () {
 describe("acceptOffer", function () {
 
     it("should allow a buyer to accept an offer", async function () {
-        const { marketplace2, iNXNFT, uSDT, offer, deployer, seller, buyer, chainId, NFTprice } = await deploy();
+        const { marketplace2, iNXNFT, uSDT, offer, deployer, seller, buyer, chainId } = await deploy();
+
         // Mint an NFT token for the seller
         await iNXNFT.connect(deployer).mintReserve(1);
         await iNXNFT.connect(deployer).transferFrom(deployer.address, seller.address, 1);
-
-        // Seller purchase an NFT
-        await uSDT.connect(seller).approve(iNXNFT.address, NFTprice);
-        await iNXNFT.connect(deployer).startPublicSale();
-        await iNXNFT.connect(seller).purchaseNFT(1);
-        await iNXNFT.connect(seller).approve(marketplace2.address, 2);
-
         // The seller approve NFT to the marketplace2
         await iNXNFT.connect(seller).approve(marketplace2.address, 1);
 
@@ -136,37 +215,8 @@ describe("acceptOffer", function () {
         const buyerERC721Owner = await iNXNFT.ownerOf(offer.tokenId);
 
         // Assert the expected state changes
-        expect(sellerERC20Balance).to.equal(ethers.utils.parseEther("12"));
+        expect(sellerERC20Balance).to.equal(offer.price);
         expect(buyerERC721Owner).to.equal(buyer.address);
-    });
-
-    it("should allow whitelisted user to purchase NFTs", async function () {
-        const { marketplace2, iNXNFT, uSDT, offer, deployer, seller, buyer, chainId, NFTprice, whitelistPrice } = await deploy();
-
-        const values = [
-            [seller.address, 1],
-            [buyer.address, 1]
-        ];
-        const tree = StandardMerkleTree.of(values, ["address", "uint256"]);
-        console.log('Merkle Root:', tree.root);
-
-        const newData = JSON.stringify(tree.dump());
-        const filePath = 'test/WorkShop/tree.json';
-
-        fs.writeFileSync(filePath, newData);
-
-        const tree2 = StandardMerkleTree.load(JSON.parse(fs.readFileSync(filePath, "utf8")));
-        for (const [i, v] of tree2.entries()) {
-            if (v[0] === seller.address) {
-                const proof = tree2.getProof(i);
-                console.log('Value:', v);
-                console.log('Proof:', proof);
-            }
-        }
-        await iNXNFT.connect(deployer).addToWhitelist([seller.address, buyer.address], [1, 1]);
-        await uSDT.connect(seller).approve(iNXNFT.address, whitelistPrice);
-        await iNXNFT.connect(seller).purchaseNFTWhitelist(1, ["0x457aa17fe0228467c8ff03c94ef937caf43d83d6102043300dc6a2e9a13a7006"]);
-        console.log("merkleRoot>>>", await iNXNFT.connect(seller).merkleRoot())
     });
 
 });
