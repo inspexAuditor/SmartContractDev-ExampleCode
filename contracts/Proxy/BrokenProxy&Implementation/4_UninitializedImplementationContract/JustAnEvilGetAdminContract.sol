@@ -6,8 +6,8 @@ pragma solidity ^0.8.9;
 
 contract JustAnEvilGetAdminContract {
 
-    function getAdmin(address payable newAdmin) external returns (address whatever) {
-        selfdestruct(payable(newAdmin));
+    function setAdmin(address payable newAdmin) external {
+        selfdestruct(newAdmin);
     }
 
 }

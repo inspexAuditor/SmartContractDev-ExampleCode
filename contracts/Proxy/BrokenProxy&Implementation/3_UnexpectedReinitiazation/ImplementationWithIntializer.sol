@@ -8,20 +8,13 @@ import "./SimpleInitializable.sol";
 
 contract ImplementationWithIntializer is SimpleInitializable {
 
-    /// Immutable variables
-    uint256 public immutable immutableVariable;
     /// Private State Variables
     uint256 private _version;
     address private _admin;
 
-    constructor(uint256 number) {
-        /// The constructor should only contain definitions of immutable variables or disable the initializer
-        immutableVariable = number;
-        _disableInitializer();
-    }
-
     function initialize(uint256 version) public initializer {
         _version = version;
+        _admin = msg.sender;
     }
 
     function getVersion() external view returns (uint256) {
@@ -33,6 +26,7 @@ contract ImplementationWithIntializer is SimpleInitializable {
     }
 
     function setAdmin(address newAdmin) external {
+        require(msg.sender == _admin, "Only admin can call this function");
         _admin = newAdmin;
     }
 
