@@ -26,6 +26,7 @@ contract ImplementationAfterUpgradeSolution is SimpleInitializable {
 
     function initialize(uint256 version, uint256 counter) public initializer {
         _version = version;
+        _admin = msg.sender;
         _counter = counter;
     }
 

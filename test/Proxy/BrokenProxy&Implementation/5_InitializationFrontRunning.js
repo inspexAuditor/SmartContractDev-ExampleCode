@@ -9,10 +9,10 @@ describe("InitializationFrontRunning", function () {
 
     /// Deploy testing contracts
     const UninitializedImplementationSolution = await ethers.getContractFactory("UninitializedImplementationSolution");
-    const ProxyWithSimpleInitializable = await ethers.getContractFactory("ProxyWithSimpleInitializable");
+    const SimpleProxyWithoutCollision = await ethers.getContractFactory("SimpleProxyWithoutCollision");
     
     const implementation = await UninitializedImplementationSolution.connect(deployer).deploy(10);
-    const proxyWithoutUpgradeToAndCall = await ProxyWithSimpleInitializable.connect(deployer).deploy(implementation.address);
+    const proxyWithoutUpgradeToAndCall = await SimpleProxyWithoutCollision.connect(deployer).deploy(implementation.address);
     
     return { proxyWithoutUpgradeToAndCall, implementation, deployer, admin, attacker };
   }

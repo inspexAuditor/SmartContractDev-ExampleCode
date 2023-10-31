@@ -20,24 +20,27 @@ contract UninitializedImplementationProblem is SimpleInitializable {
 
     function initialize(uint256 version) public initializer {
         _version = version;
+        _admin = msg.sender;
     }
 
     function getVersion() external view returns (uint256) {
         return _version;
     }
 
-    function getAdmin() external view returns (address) {
+    function getAdmin() public view returns (address) {
         return _admin;
     }
 
     function setAdmin(address newAdmin) external {
+        require(msg.sender == _admin, "Only admin can call this function");
         _admin = newAdmin;
     }
 
-    function setAdminButDelegatecall(address target, address newAdmin) external {
-        (bool success, ) = target.delegatecall(
+    function setAdminButDelegatecall(address delegatecallTarget, address newAdmin) external {
+        require(msg.sender == _admin, "Only admin can call this function");
+        (bool success, ) = delegatecallTarget.delegatecall(
             abi.encodeWithSignature(
-                "getAdmin(address)", 
+                "setAdmin(address)",
                 newAdmin
             )
         );

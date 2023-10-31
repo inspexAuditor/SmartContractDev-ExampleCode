@@ -6,7 +6,7 @@ pragma solidity ^0.8.9;
 import "./SimpleInitializable.sol";
 
 /// This contract is just showing some parts of EIP-1967
-contract ProxyWithSimpleInitializable is SimpleInitializable {
+contract SimpleProxyWithoutCollision {
     /// To avoid clashes in storage usage between the proxy and logic contract, 
     /// the address of the logic contract is typically saved in a specific storage slot
     /// According to the EIP-1967:

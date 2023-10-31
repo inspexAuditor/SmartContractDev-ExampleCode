@@ -25,8 +25,8 @@ describe("UninitializedImplementationContract", function () {
       const { evilGetAdmin, uninitializedImplementationProblem, uninitializedImplementationSolution, deployer, admin, attacker } = await deploy();
       /// Deploy and initialize proxy contract
       const UninitializedImplementationProblem = await ethers.getContractFactory("UninitializedImplementationProblem");
-      const ProxyWithSimpleInitializable = await ethers.getContractFactory("ProxyWithSimpleInitializable");
-      const proxy = await ProxyWithSimpleInitializable.connect(admin).deploy(uninitializedImplementationProblem.address);
+      const SimpleProxyWithoutCollision = await ethers.getContractFactory("SimpleProxyWithoutCollision");
+      const proxy = await SimpleProxyWithoutCollision.connect(admin).deploy(uninitializedImplementationProblem.address);
       const version = 5;
       const proxy_as_UninitializedImplementationProblem = UninitializedImplementationProblem.attach(proxy.address);
       await proxy_as_UninitializedImplementationProblem.connect(admin).initialize(version);
@@ -40,7 +40,7 @@ describe("UninitializedImplementationContract", function () {
 
       /// The attacker initializes the implementation contract
       await uninitializedImplementationProblem.connect(attacker).initialize(version);
-      /// then uses setAdminButDelegatecall() to delegate calls to destroy the implementation contract
+      /// then uses getAdminButDelegatecall() to delegate calls to destroy the implementation contract
       await uninitializedImplementationProblem.connect(attacker).setAdminButDelegatecall(evilGetAdmin.address, attacker.address);
 
       console.log(`-- After the attack --`);
@@ -55,14 +55,18 @@ describe("UninitializedImplementationContract", function () {
       const { evilGetAdmin, uninitializedImplementationProblem, uninitializedImplementationSolution, deployer, admin, attacker } = await deploy();
       /// Deploy and initialize proxy contract
       const UninitializedImplementationSolution = await ethers.getContractFactory("UninitializedImplementationSolution");
-      const ProxyWithSimpleInitializable = await ethers.getContractFactory("ProxyWithSimpleInitializable");
-      const proxy = await ProxyWithSimpleInitializable.connect(admin).deploy(uninitializedImplementationSolution.address);
+      const SimpleProxyWithoutCollision = await ethers.getContractFactory("SimpleProxyWithoutCollision");
+      const proxy = await SimpleProxyWithoutCollision.connect(admin).deploy(uninitializedImplementationSolution.address);
       const version = 5;
       const proxy_as_UninitializedImplementationSolution = UninitializedImplementationSolution.attach(proxy.address);
       await proxy_as_UninitializedImplementationSolution.connect(admin).initialize(version);
 
       /// The attacker trying initializes the implementation contract, but it will be failed
-      await expect(uninitializedImplementationSolution.connect(attacker).initialize(version)).to.be.revertedWith("This contract is already initialized");
+      await expect(
+        uninitializedImplementationSolution.connect(attacker).initialize(version)
+      ).to.be.revertedWith(
+        "This contract is already initialized"
+      );
     });
   });
 
