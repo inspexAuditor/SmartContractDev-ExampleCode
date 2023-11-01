@@ -10,6 +10,7 @@ contract SimpleErrorHandlingContract {
 
     uint256 public value;
 
+    /// Function that uses revert
     function setValue(uint256 _value) external {
         if (_value < 10){
             revert("Value must be in range 10-100"); // revert with reason string
@@ -20,12 +21,14 @@ contract SimpleErrorHandlingContract {
         value = _value;
     }
 
+    /// Function that uses require
     function decreseValue(uint256 _amount) external {
         uint256 newValue = value - _amount;
         require(newValue >= 10, "Value must be in range 10-100");
         value = newValue;
     }
 
+    /// Function that uses assert
     function increaseValue(uint256 _amount) external {
         uint256 newValue = value + _amount;
         assert(newValue <= 100);

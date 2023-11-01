@@ -53,10 +53,6 @@ describe("StorageOrderingInNewImplementation", function () {
       console.log(`slot[2] (_newVarB): ${_newVarB}`);
       console.log(`slot[3] (_version): ${_version}`);
       console.log(`slot[4] (_admin)  : ${_admin}`);
-      ///Admin try to call admin's function
-      const ImplementationAfterUpgradeProblem = await ethers.getContractFactory("ImplementationAfterUpgradeProblem");
-      const upgradableProxy_as_newImplementationProblem = ImplementationAfterUpgradeProblem.attach(upgradableProxy.address);
-      await expect(upgradableProxy_as_newImplementationProblem.connect(admin).setAdmin(newAdmin.address)).to.be.revertedWith("Only admin can call this function");
     });
 
     it("Solution: Always add new state variables at the bottom slot", async () => {

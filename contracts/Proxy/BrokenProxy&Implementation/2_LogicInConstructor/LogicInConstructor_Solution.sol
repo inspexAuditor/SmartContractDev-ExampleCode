@@ -12,6 +12,7 @@ contract LogicInConstructorSolution {
     
     function initialize(uint256 version) public {
         _version = version;
+        _admin = msg.sender;
     }
 
     function getVersion() external view returns (uint256) {
@@ -23,6 +24,7 @@ contract LogicInConstructorSolution {
     }
 
     function setAdmin(address newAdmin) external {
+        require(msg.sender == _admin, "Only admin can call this function");
         _admin = newAdmin;
     }
 

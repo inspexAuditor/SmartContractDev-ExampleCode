@@ -22,6 +22,7 @@ contract UninitializedImplementationSolution is SimpleInitializable {
 
     function initialize(uint256 version) public initializer {
         _version = version;
+        _admin = msg.sender;
     }
 
     function getVersion() external view returns (uint256) {
