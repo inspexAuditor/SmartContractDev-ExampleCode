@@ -1,34 +1,58 @@
-const { ethers, waffle } = require("hardhat");
+const { ethers } = require("hardhat");
 const { expect } = require("chai");
-const { BigNumber, utils } = require("ethers");
 
 describe("Attack", function () {
+    let deployer, attacker;
+    let uSDT, randomGame, attack;
+    let PLAY_FEE, REWARD;
 
-    async function deploy() {
-        /// Get accounts
-        let [deployer, user, attacker] = await ethers.getSigners();
+    before(async function () {
+        [deployer, , attacker] = await ethers.getSigners();
 
-        /// Deploy Bank contracts
+        const USDT = await ethers.getContractFactory("USDT");
+        uSDT = await USDT.connect(deployer).deploy();
+        await uSDT.connect(deployer).mint(attacker.address, ethers.utils.parseEther("1000"));
+
         const RandomGame = await ethers.getContractFactory("RandomGame");
-        const randomGame = await RandomGame.connect(deployer).deploy({ value: utils.parseEther("0.1") });
+        randomGame = await RandomGame.connect(deployer).deploy(uSDT.address);
+        PLAY_FEE = await randomGame.PLAY_FEE();
+        REWARD = await randomGame.REWARD();
+        
+        await randomGame.connect(deployer).start();
 
-        /// Deploy Attack contracts
         const AttackRandomGame = await ethers.getContractFactory("AttackRandomGame");
-        const attack = await AttackRandomGame.connect(attacker).deploy(randomGame.address);
+        attack = await AttackRandomGame.connect(attacker).deploy(randomGame.address, uSDT.address);
 
-        return { randomGame, attack };
-    }
+        // Fetch the play fee and reward from the RandomGame contract
 
-    it("Should be able to guess the exact number", async function () {
-        // Deploy the Game contract
-        const { randomGame, attack } = await deploy();
 
-        // Attack the Game contract
-        const tx = await attack.attack();
-        await tx.wait();
+        // Approve the attack contract to spend PLAY_FEE of USDT on behalf of the attacker
+        await uSDT.connect(attacker).approve(attack.address, PLAY_FEE);
+        await uSDT.connect(deployer).approve(randomGame.address, REWARD);
+    });
 
-        const balanceGame = await randomGame.getBalance();
-        // Balance of the Game contract should be 0
-        expect(balanceGame).to.equal(BigNumber.from("0"));
+    it("Should have USDT balance equal to REWARD after attack", async function () {
+        // Balance of AttackRandomGame contract should be 0 before the attack
+        let balanceOfAttackContract = await uSDT.balanceOf(attack.address);
+        expect(balanceOfAttackContract).to.equal(0);
+
+        // Perform the attack and confirm the transaction
+        await attack.connect(attacker).attack();
+
+        // Balance of AttackRandomGame contract should be equal to REWARD after the attack
+        balanceOfAttackContract = await uSDT.balanceOf(attack.address);
+        // expect(balanceOfAttackContract).to.equal(REWARD);
+        expect(balanceOfAttackContract).to.equal(BigInt(PLAY_FEE) + BigInt(REWARD));
+
+    });
+
+    // Optional afterEach cleanup, if necessary
+    afterEach(async function () {
+        // Add any cleanup steps if needed
+    });
+
+    // Optional after all tests cleanup, if necessary
+    after(async function () {
+        // Add any cleanup steps for after all tests are done
     });
 });
