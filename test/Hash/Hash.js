@@ -108,6 +108,22 @@ describe("Hashing and encoding", function () {
       expect(encodedDataFromJS).to.eq(encodedDataFromContract);
       expect(hashFromJS).to.eq(hashFromContract);
     });
+
+    it("EncodePacked and Encode '1' '23' ", async () => {
+      const { hashContract, part1, part2, salt, randomBytes, randomBytes32 } = await deploy();
+
+      const getEncodeV1 = await hashContract.getEncodeV1(1, 23);
+      const getEncodePackedV1 = await hashContract.getEncodePackedV1(1, 23);
+      const getHashEncode = await hashContract.getHashEncodeV1(1, 23);
+      const getHashEncodePacked = await hashContract.getHashEncodePackedV1(1, 23);
+
+      console.log("\ngetEncodeV1",getEncodeV1)
+      console.log("\ngetEncodePackedV1",getEncodePackedV1)
+      console.log("\ngetHashEncode",getHashEncode)
+      console.log("\ngetHashEncodePacked",getHashEncodePacked)
+
+
+    });
   });
 
 });

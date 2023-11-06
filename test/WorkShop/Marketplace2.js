@@ -3,6 +3,8 @@ const { ethers } = require("hardhat");
 const { MerkleTree } = require('merkletreejs');
 const { StandardMerkleTree } = require('@openzeppelin/merkle-tree');
 const fs = require('fs');
+const { getContractAddress } = require('@ethersproject/address')
+
 // import { StandardMerkleTree } from "@openzeppelin/merkle-tree";
 // import fs from "fs";
 
@@ -62,6 +64,8 @@ async function deploy() {
         whitelistMaxPurchase,
         merkleRoot);
 
+    await iNXNFT.connect(deployer).startPublicSale();
+
     const Marketplace2 = await ethers.getContractFactory("Marketplace2");
     const marketplace2 = await Marketplace2.connect(deployer).deploy();
 
@@ -80,12 +84,14 @@ async function deploy() {
     await uSDT.connect(deployer).mint(buyer.address, ethers.utils.parseEther("10"));
     await uSDT.connect(deployer).mint(seller.address, ethers.utils.parseEther("10"));
 
+    await uSDT.connect(seller).approve(iNXNFT.address, ethers.utils.parseEther("10"));
+    await uSDT.connect(seller).approve(iNXNFT.address, ethers.utils.parseEther("10"));
 
+    // const noContractAllowedNFTPurchase = 0;
     return { marketplace2, iNXNFT, uSDT, offer, deployer, seller, buyer, otherAccount, chainId, NFTprice, whitelistPrice };
 }
 
 describe("Verify Signature", function () {
-
     it("should return the correct message hash with getMessageHashEncodePacked() function", async function () {
         const { marketplace2, iNXNFT, uSDT, offer, deployer, chainId } = await deploy();
 
@@ -179,6 +185,25 @@ describe("Verify Signature", function () {
         expect(result, 'Signature is not valid').to.be.true
     });
 
+    it("Cross Purpose", async function () {
+        const { marketplace2, iNXNFT, uSDT, offer, seller, deployer, chainId } = await deploy();
+
+        const messageHash = ethers.utils.solidityKeccak256(
+            ["bool", "address", "uint256", "address", "uint256", "uint256"],
+            [
+                offer.isSell,
+                offer.nftAddress,
+                offer.tokenId,
+                offer.tokenAddress,
+                offer.price,
+                offer.expiry,
+            ]
+        );
+        const signature = await seller.signMessage(ethers.utils.arrayify(messageHash));
+
+        console.log(signature)
+    });
+
     it("EIP 712", async function () {
         const { marketplace2, iNXNFT, uSDT, offer, deployer, seller, chainId } = await deploy();
 
@@ -214,18 +239,12 @@ describe("Verify Signature", function () {
         };
 
 
-        // สร้างข้อมูลที่ต้องการเซ็น
         const dataToSign = { domain, types, value };
-
-        // เซ็นข้อมูล
         const signature = await seller._signTypedData(domain, types, value);
-
-
 
         const recoveredAddress = ethers.utils.verifyTypedData(domain, types, value, signature);
 
         console.log("712 recoveredAddress", recoveredAddress); // นี่ควรจะตรงกับที่อยู่ของ signer
-
 
         const expectedHash = ethers.utils.solidityKeccak256(
             ["bool", "address", "uint256", "address", "uint256", "uint256", "address", "uint256"],
@@ -253,8 +272,6 @@ describe("Verify Signature", function () {
 
 
 describe("acceptOffer", function () {
-
-
     it("should allow a buyer to accept an offer 1", async function () {
         const { marketplace2, iNXNFT, uSDT, offer, deployer, seller, buyer, chainId, NFTprice } = await deploy();
         // Mint an NFT token for the seller
@@ -372,8 +389,8 @@ describe("acceptOffer", function () {
             ['0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC', 1]
         ];
 
-        console.log("buyer.address >> ",buyer.address)
-        console.log("buyer.address >> ",await iNXNFT.connect(seller).hashLeaf())
+        console.log("buyer.address >> ", buyer.address)
+        console.log("buyer.address >> ", await iNXNFT.connect(seller).hashLeaf())
         const tree = StandardMerkleTree.of(Whitelist, ["address", "uint256"]);
         const newData = JSON.stringify(tree.dump());
         const filePath = 'test/WorkShop/tree.json';
@@ -389,10 +406,10 @@ describe("acceptOffer", function () {
             }
         }
         await uSDT.connect(seller).approve(iNXNFT.address, whitelistPrice);
-        await iNXNFT.connect(seller).purchaseNFTWhitelist(
-            1,
-            ["0x457aa17fe0228467c8ff03c94ef937caf43d83d6102043300dc6a2e9a13a7006"]
-        );
+        // await iNXNFT.connect(seller).purchaseNFTWhitelist(
+        //     1,
+        //     ["0x457aa17fe0228467c8ff03c94ef937caf43d83d6102043300dc6a2e9a13a7006"]
+        // );
         // console.log("merkleRoot>>>", await iNXNFT.connect(seller).merkleRoot())
 
     });
@@ -400,3 +417,32 @@ describe("acceptOffer", function () {
 
 
 });
+
+
+describe("NoContractAllowed", function () {
+
+    async function deployByPassingContract() {
+        const { iNXNFT, uSDT, seller } = await deploy();
+        const transactionCount = await seller.getTransactionCount()
+        const futureAddress = getContractAddress({
+            from: seller.address,
+            nonce: transactionCount + 1
+        })
+        await uSDT.connect(seller).approve(futureAddress, ethers.utils.parseEther("100"));
+        const PurchaseNFTV1 = await ethers.getContractFactory("PurchaseNFTV1");
+        const purchaseNFTV1 = await PurchaseNFTV1.connect(seller).deploy(uSDT.address, iNXNFT.address, { gasLimit: 500000 });
+        return { purchaseNFTV1, seller, iNXNFT };
+    }
+
+    describe("Attack scenario", () => {
+        it("Bypass isContract() to purchase NFT", async () => {
+            const { purchaseNFTV1, seller, iNXNFT } = await deployByPassingContract()
+            purchaseNFTV1.connect(seller).withdrawNFT(1);
+            expect(await iNXNFT.balanceOf(seller.address)).to.equal(1);
+        });
+    });
+
+});
+
+
+

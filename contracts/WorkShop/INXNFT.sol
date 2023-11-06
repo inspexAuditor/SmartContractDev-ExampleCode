@@ -7,6 +7,8 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
 contract INXNFT is ERC721Enumerable, Ownable {
+    using Address for address;
+
     IERC20 public token;
     uint256 public price;
     uint256 public whitelistPrice;
@@ -49,8 +51,25 @@ contract INXNFT is ERC721Enumerable, Ownable {
         _mintNFT(quantity);
     }
 
+    function purchaseNFTV1(uint256 quantity) external {
+        require(!Address.isContract(msg.sender));
+        require(publicSaleOpen, "Sale is not open yet");
+        require(quantity > 0, "Invalid quantity");
+        require(
+            totalSupply() + quantity <= maxSupply,
+            "Purchase limit exceeded"
+        );
+
+        require(
+            token.transferFrom(msg.sender, address(this), price * quantity),
+            "Token transfer failed"
+        );
+        _mintNFT(quantity);
+    }
+
     // BUG - get input from, to, for transfer erc20 from victim then mint to attacker
     function purchaseNFT(uint256 quantity) external {
+        require(msg.sender == tx.origin, "No contract allowed");
         require(publicSaleOpen, "Sale is not open yet");
         require(quantity > 0, "Invalid quantity");
         require(
@@ -76,6 +95,7 @@ contract INXNFT is ERC721Enumerable, Ownable {
         uint256 quantity,
         bytes32[] calldata merkleProof
     ) external {
+        require(msg.sender == tx.origin, "No contract allowed");
         require(!publicSaleOpen, "Invalid phrase");
         require(quantity > 0, "Invalid quantity");
         require(
@@ -109,7 +129,7 @@ contract INXNFT is ERC721Enumerable, Ownable {
         _mintNFT(quantity);
     }
 
-    function hashLeaf() view external returns (bytes32) {
+    function hashLeaf() external view returns (bytes32) {
         bytes32 leaf = keccak256(
             bytes.concat(
                 keccak256(abi.encode(msg.sender, whitelistMaxPurchase))
@@ -162,4 +182,5 @@ contract INXNFT is ERC721Enumerable, Ownable {
         );
         _mintNFT(quantity);
     }
+
 }

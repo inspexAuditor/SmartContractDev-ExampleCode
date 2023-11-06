@@ -45,16 +45,6 @@ contract Marketplace2 is Ownable {
         uint256 nonce;
     }
 
-    struct Offer7 {
-        bool isSell;
-        address nftAddress;
-        uint256 tokenId;
-        address tokenAddress;
-        uint256 price;
-        uint256 expiry;
-        uint256 nonce;
-    }
-
     struct Offer {
         bool isSell;
         address nftAddress;
@@ -146,6 +136,7 @@ contract Marketplace2 is Ownable {
 
     //FIXED : Replay Attack
     mapping(bytes => bool) public _signatureUsed;
+
     function acceptOfferV1(
         Offer1 calldata _offer,
         bytes calldata _signature
@@ -262,10 +253,9 @@ contract Marketplace2 is Ownable {
 
     //FIXED : Cancel Listing
     function acceptOfferV5(
-        Offer7 calldata _offer,
+        Offer4 calldata _offer,
         bytes calldata _signature
     ) external {
-
         bytes32 messageHash = getMessageHashEncode7(_offer);
         bytes32 message = ECDSA.toEthSignedMessageHash(messageHash);
         address signer = ECDSA.recover(message, _signature);
@@ -421,8 +411,8 @@ contract Marketplace2 is Ownable {
         );
     }
 
-    function acceptOffer7(
-        Offer7 calldata _offer,
+    function acceptOffer4(
+        Offer4 calldata _offer,
         bytes calldata _signature
     ) external {
         bytes32 messageHash = getMessageHashEncode7(_offer);
@@ -532,7 +522,7 @@ contract Marketplace2 is Ownable {
     }
 
     function getMessageHashEncode7(
-        Offer7 calldata _offer
+        Offer4 calldata _offer
     ) public view returns (bytes32) {
         return
             keccak256(

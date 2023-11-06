@@ -49,7 +49,32 @@ contract INXNFTV1 is ERC721Enumerable, Ownable {
         _mintNFT(quantity);
     }
 
+    function isContract(address account) private view returns (bool) {
+        uint256 size;
+        assembly {
+            size := extcodesize(account)
+        }
+        return size > 0;
+    }
+
+    function purchaseNFTV1(uint256 quantity) external {
+        require(!isContract(msg.sender), "No contract allowed");
+        require(publicSaleOpen, "Sale is not open yet");
+        require(quantity > 0, "Invalid quantity");
+        require(
+            totalSupply() + quantity <= maxSupply,
+            "Purchase limit exceeded"
+        );
+
+        require(
+            token.transferFrom(msg.sender, address(this), price * quantity),
+            "Token transfer failed"
+        );
+        _mintNFT(quantity);
+    }
+
     function purchaseNFT(uint256 quantity) external {
+        require(msg.sender == tx.origin, "No contract allowed");
         require(publicSaleOpen, "Sale is not open yet");
         require(quantity > 0, "Invalid quantity");
         require(

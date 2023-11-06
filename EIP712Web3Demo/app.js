@@ -39,6 +39,25 @@ const value = {
     nonce: 42,
 };
 
+document.getElementById('signButton').addEventListener('click', async () => {
+    try {
+        if (window.ethereum) {
+            const provider = new ethers.providers.Web3Provider(window.ethereum);
+            await provider.send("eth_requestAccounts", []);
+            const signer = provider.getSigner();
+
+            const hash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(value));
+
+            const signature = await signer.signMessage(ethers.utils.arrayify(hash));
+
+            console.log('Signed hash:', signature);
+        } else {
+            console.error('MetaMask is not installed!');
+        }
+    } catch (error) {
+        console.error(error);
+    }
+});
 
 document.getElementById('signButtonERC712').addEventListener('click', async () => {
     try {
@@ -67,22 +86,6 @@ document.getElementById('signButtonERC712').addEventListener('click', async () =
     }
 });
 
-document.getElementById('signButton').addEventListener('click', async () => {
-    try {
-        if (window.ethereum) {
-            const provider = new ethers.providers.Web3Provider(window.ethereum);
-            await provider.send("eth_requestAccounts", []);
-            const signer = provider.getSigner();
 
-            const hash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(value));
 
-            const signature = await signer.signMessage(ethers.utils.arrayify(hash));
 
-            console.log('Signed hash:', signature);
-        } else {
-            console.error('MetaMask is not installed!');
-        }
-    } catch (error) {
-        console.error(error);
-    }
-});
