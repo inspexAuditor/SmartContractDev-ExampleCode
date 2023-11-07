@@ -27,7 +27,7 @@ contract AttackRandomGame {
         // uint256 blockHash = uint256(blockhash(blockNumber));
         uint256 blockHash = uint256(
             keccak256(
-                abi.encodePacked(blockhash(block.number), block.timestamp)
+                abi.encodePacked(blockhash(block.number - 1), block.timestamp)
             )
         );
         uint256 prediction = (blockHash % (MAX_NUMBER - MIN_NUMBER + 1)) +

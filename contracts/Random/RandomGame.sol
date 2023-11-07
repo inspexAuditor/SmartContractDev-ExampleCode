@@ -22,7 +22,7 @@ contract RandomGame is Ownable {
     function secretNumber() private view returns (uint256) {
         uint256 randomHash = uint256(
             keccak256(
-                abi.encodePacked(blockhash(block.number), block.timestamp)
+                abi.encodePacked(blockhash(block.number - 1), block.timestamp)
             )
         );
         return (randomHash % (MAX_NUMBER - MIN_NUMBER + 1)) + MIN_NUMBER;
