@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@openzeppelin/merkle-tree": "^1.0.5",
+    "@uniswap/v2-periphery": "^1.1.0-beta.0",
     "express": "^4.18.2",
     "merkletreejs": "^0.3.10"
   },
