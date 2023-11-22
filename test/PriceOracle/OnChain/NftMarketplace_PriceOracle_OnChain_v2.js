@@ -11,7 +11,7 @@ const PAIR_WETH_RESERVE = ethers.utils.parseEther("1");
 const ATTACKER_TOKEN_INITIAL = ethers.utils.parseEther("100000");
 const ATTACKER_ETH_INITIAL = ethers.utils.parseEther("20");
 
-describe("NftMarketplace PriceOracle v2", function () {
+describe("NftMarketplace On-Chain PriceOracle v2", function () {
   
   async function deploy() {
     /// Get accounts
