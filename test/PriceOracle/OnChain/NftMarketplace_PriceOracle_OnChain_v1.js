@@ -100,7 +100,7 @@ describe("NftMarketplace On-Chain PriceOracle v1", function () {
   }
 
   describe("Deployment", () => {
-    it("Deploy NftMarketplace_PriceOracle_v1", async () => {
+    it("Deploy NftMarketplace_PriceOracle_OnChain_v1", async () => {
       const { uniswapFactory, uniswapRouter, uniswapPair, marketplace, weth, token, nft, seller, attacker, deployer } = await deploy();
       expect(await nft.ownerOf(0)).to.equal(seller.address);
       expect(await uniswapPair.balanceOf(deployer.address)).to.be.gt(0);
