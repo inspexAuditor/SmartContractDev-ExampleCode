@@ -11,7 +11,7 @@ const PAIR_WETH_RESERVE = ethers.utils.parseEther("1");
 const ATTACKER_TOKEN_INITIAL = ethers.utils.parseEther("100000");
 const ATTACKER_ETH_INITIAL = ethers.utils.parseEther("20");
 
-describe("NftMarketplace PriceOracle v2", function () {
+describe("NftMarketplace On-Chain PriceOracle v2", function () {
   
   async function deploy() {
     /// Get accounts
@@ -114,7 +114,7 @@ describe("NftMarketplace PriceOracle v2", function () {
   }
 
   describe("Deployment", () => {
-    it("Deploy NftMarketplace_PriceOracle_v2", async () => {
+    it("Deploy NftMarketplace_PriceOracle_OnChain_v2", async () => {
       const { uniswapFactory, uniswapRouter, uniswapPair, marketplace, weth, token, nft, seller, attacker, deployer } = await deploy();
       expect(await nft.ownerOf(0)).to.equal(seller.address);
       expect(await uniswapPair.balanceOf(deployer.address)).to.be.gt(0);
