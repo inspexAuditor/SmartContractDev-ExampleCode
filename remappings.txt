@@ -1,2 +1,4 @@
 @openzeppelin=node_modules/@openzeppelin
 openzeppelin-contracts-06=node_modules/openzeppelin-contracts-06
+@uniswap=node_modules/@uniswap
+@chainlink=node_modules/@chainlink

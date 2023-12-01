@@ -6,9 +6,10 @@ pragma solidity ^0.8.9;
 
 contract AccessControlCustomWhitelist {
     
+    string constant public name = "Private Bank (only whitelisted)";
     address public admin;
-    mapping (address => bool) public  whitelist;
-    mapping (address => uint256) public  cooldown;
+    mapping (address => bool) public whitelist;
+    mapping (address => uint256) public balanceOf;
 
     constructor(address newAdmin) payable {
         admin = newAdmin;
@@ -35,14 +36,16 @@ contract AccessControlCustomWhitelist {
             whitelist[users[i]] = false;
         }
     }
-    receive() external payable {}
+    
+    function deposit(address _receiver) external payable onlyWhitelist {
+        require(msg.value > 0, "invalid balance");
+        balanceOf[_receiver] += msg.value;
+    }
 
-    function requestForETH() external onlyWhitelist {
-        uint256 amount = 0.1 ether;
-        require(address(this).balance >= amount, "Insufficient funds");
-        require(cooldown[msg.sender] <= block.timestamp, "Please wait for the delay");
-        cooldown[msg.sender] = block.timestamp + 7 days;
-        (bool sent, ) = payable(msg.sender).call{value: amount}("");
+    function withdraw(address _to, uint256 _amount) external onlyWhitelist {
+        require(balanceOf[msg.sender] >= _amount, "insufficient balance");
+        balanceOf[msg.sender] -= _amount;
+        (bool sent, ) = payable(_to).call{value: _amount}("");
         require(sent, "Failed to send Ether");
     }
 
