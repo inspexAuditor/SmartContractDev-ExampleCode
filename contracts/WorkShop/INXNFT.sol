@@ -51,6 +51,7 @@ contract INXNFT is ERC721Enumerable, Ownable {
         _mintNFT(quantity);
     }
 
+
     function purchaseNFTV1(uint256 quantity) external {
         require(!Address.isContract(msg.sender));
         require(publicSaleOpen, "Sale is not open yet");
@@ -87,7 +88,7 @@ contract INXNFT is ERC721Enumerable, Ownable {
     function _mintNFT(uint256 quantity) internal {
         for (uint256 i = 0; i < quantity; i++) {
             uint256 tokenId = totalSupply() + 1;
-            _mint(msg.sender, tokenId);
+            _safeMint(msg.sender, tokenId);
         }
     }
 
@@ -128,6 +129,45 @@ contract INXNFT is ERC721Enumerable, Ownable {
         );
         _mintNFT(quantity);
     }
+    
+
+    function purchaseNFTWhitelistV1(
+        uint256 quantity,
+        bytes32[] calldata merkleProof
+    ) external {
+        require(!publicSaleOpen, "Invalid phrase");
+        require(quantity > 0, "Invalid quantity");
+        require(
+            totalSupply() + quantity <= maxSupply,
+            "Sale would exceed max supply"
+        );
+
+        bytes32 leaf = keccak256(
+            bytes.concat(
+                keccak256(abi.encode(msg.sender, whitelistMaxPurchase))
+            )
+        );
+        require(
+            MerkleProof.verify(merkleProof, merkleRoot, leaf),
+            "Invalid proof"
+        );
+        // BUG - not check already minted token, must check minted amount with allowed
+        require(
+            whitelistMinted[msg.sender] + quantity <= whitelistMaxPurchase,
+            "Exceed whitelist limit"
+        );
+        // require(
+        //     token.transferFrom(
+        //         msg.sender,
+        //         address(this),
+        //         whitelistPrice * quantity
+        //     ),
+        //     "Token transfer failed"
+        // );
+        _mintNFT(quantity);
+
+        whitelistMinted[msg.sender] += quantity;
+    }
 
     function hashLeaf() external view returns (bytes32) {
         bytes32 leaf = keccak256(
@@ -159,28 +199,27 @@ contract INXNFT is ERC721Enumerable, Ownable {
         }
     }
 
-    function purchaseNFTWhitelist(uint256 quantity) external {
-        require(!publicSaleOpen, "Invalid phrase");
-        require(quantity > 0, "Invalid quantity");
-        require(
-            totalSupply() + quantity <= maxSupply,
-            "Sale would exceed max supply"
-        );
-        require(
-            whitelistMinted[msg.sender] + quantity <= whitelist[msg.sender],
-            "Unauthorized"
-        );
+    // function purchaseNFTWhitelist(uint256 quantity) external {
+    //     require(!publicSaleOpen, "Invalid phrase");
+    //     require(quantity > 0, "Invalid quantity");
+    //     require(
+    //         totalSupply() + quantity <= maxSupply,
+    //         "Sale would exceed max supply"
+    //     );
+    //     require(
+    //         whitelistMinted[msg.sender] + quantity <= whitelist[msg.sender],
+    //         "Unauthorized"
+    //     );
 
-        whitelistMinted[msg.sender] += quantity;
-        require(
-            token.transferFrom(
-                msg.sender,
-                address(this),
-                whitelistPrice * quantity
-            ),
-            "Token transfer failed"
-        );
-        _mintNFT(quantity);
-    }
-
+    //     whitelistMinted[msg.sender] += quantity;
+    //     require(
+    //         token.transferFrom(
+    //             msg.sender,
+    //             address(this),
+    //             whitelistPrice * quantity
+    //         ),
+    //         "Token transfer failed"
+    //     );
+    //     _mintNFT(quantity);
+    // }
 }

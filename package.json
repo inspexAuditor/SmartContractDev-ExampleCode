@@ -11,10 +11,11 @@
   },
   "dependencies": {
     "@openzeppelin/merkle-tree": "^1.0.5",
+    "@remix-project/remixd": "^0.6.19",
     "express": "^4.18.2",
     "merkletreejs": "^0.3.10"
   },
   "scripts": {
-    "EIP712":"node server.js"
+    "EIP712": "node server.js"
   }
 }

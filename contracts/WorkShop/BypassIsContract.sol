@@ -5,7 +5,7 @@ pragma solidity ^0.8.9;
 // import "hardhat/console.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract PurchaseNFTV1 {
+contract BypassIsContract {
     address owner;
     address target;
     constructor(address erc20TokenAddress, address _target) {
