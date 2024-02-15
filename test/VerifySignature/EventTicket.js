@@ -193,10 +193,10 @@ describe("EventTicket", function () {
     console.log("2) getEthSignedMessageHash:", getEthSignedMessageHash);
     const signature = await deployer.signMessage(ethers.utils.arrayify(messageHash));
     console.log("3) Sign message hash (signature)", signature)
-    const SignatureMalleability = await eventTicket.getMalleabilitySignature(signature);
-    console.log("4) SignatureMalleability message hash (signature)", SignatureMalleability)
-    const RSV = await eventTicket.getRSV(signature);
-    console.log("5) RSV", RSV)
+    // const SignatureMalleability = await eventTicket.getMalleabilitySignature(signature);
+    // console.log("4) SignatureMalleability message hash (signature)", SignatureMalleability)
+    // const RSV = await eventTicket.getRSV(signature);
+    // console.log("5) RSV", RSV)
 
 
     const result = await eventTicket.verify(signer, messageHash, signature);
@@ -220,8 +220,8 @@ describe("EventTicket", function () {
     const signature = await deployer.signMessage(ethers.utils.arrayify(messageHash));
     const signature2 = await deployer.signMessage(ethers.utils.arrayify(messageHash2));
     console.log("3) Sign message hash (signature)", signature)
-    const SignatureMalleability = await eventTicket.getMalleabilitySignature(signature);
-    console.log("4) SignatureMalleability message hash (signature)", SignatureMalleability)
+    // const SignatureMalleability = await eventTicket.getMalleabilitySignature(signature);
+    // console.log("4) SignatureMalleability message hash (signature)", SignatureMalleability)
 
 
 
