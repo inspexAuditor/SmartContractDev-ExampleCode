@@ -14,6 +14,6 @@ const merkleRootUint8Array = tree.tree[0];
 const merkleRootHex = Buffer.from(merkleRootUint8Array).toString('hex');
 console.log(merkleRootHex);
 
-const filePath = 'test/WorkShop/tree2.json';
+const filePath = 'test/ProjectExample/tree2.json';
 
 fs.writeFileSync(filePath, newData);

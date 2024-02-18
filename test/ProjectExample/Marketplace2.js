@@ -383,7 +383,7 @@ describe("Reentrancy ", function () {
 
         const tree = StandardMerkleTree.of(Whitelist2, ["address", "uint256"]);
         const newData = JSON.stringify(tree.dump());
-        const filePath = 'test/WorkShop/tree2.json';
+        const filePath = 'test/ProjectExample/tree2.json';
 
         fs.writeFileSync(filePath, newData);
 
