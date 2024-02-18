@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.7.0;
 
-contract NoobBank {
+contract BadExample {
     
     address public admin;
     uint256 public percentReward;
